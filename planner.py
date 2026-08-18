@@ -85,7 +85,7 @@ def read_item(plan: str,model:str):
 def read_item(model:str,progress_bar:bool,plan: List[str] = Query(...)):
     if len(plan)>1:
         return {"request":plan,"response":"Price will go up. It is free plan!"}
-    num_cores = min(multiprocessing.cpu_count()//2,1)
+    num_cores = min(multiprocessing.cpu_count(),1)
     results = [{"goal" : g, "model" : model} for g in plan]
     with WorkerPool(n_jobs=num_cores,daemon=False) as pool:
         results = pool.map(run_planner_execution, results, progress_bar=progress_bar)
