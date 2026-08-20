@@ -69,6 +69,21 @@ def run_planner_execution(goal:str,model:str)->str:
     final_response = get_response(model,messages,None)
     return {"request":goal,"response":get_choice(final_response)}
 
+def run_classification_execution(user_prompt:str,model:str,labels:list)->str:
+    role1 = "system"
+    role2 = "user"
+    ROLE = "role"
+    CONTENT = "content"
+    # model="openai/gpt-oss-120b"
+    messages = [
+        {ROLE:role1,CONTENT:f"Classify the request into one of {labels}. Reply with just the label."},
+        {ROLE:role2,CONTENT:user_prompt},
+    ]
+    
+    route_response = get_response(model,messages,None)
+    label = get_choice(route_response).strip().lower()
+    return {"request":user_prompt,"response":label}
+
 
 app = FastAPI()
 
@@ -92,4 +107,10 @@ def read_item(model:str,progress_bar:bool,plan: List[str] = Query(...)):
     return results
 
     
+@app.get("/classify/")
+def read_item(model:str,user_prompt:str,labels: List[str] = Query(...)):
+    labels.append("other")
+    labels = list(set([l.lower() for l in labels]))
+    results = run_classification_execution(user_prompt,model,labels)
+    return results
 
