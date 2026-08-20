@@ -97,6 +97,19 @@ def run_storyCreation_execution(topic:str,model:str)->str:
     story = get_choice(story_response).strip().lower()
     return {"request":topic,"response":story}
 
+def run_universalCreation_execution(topic:str,model:str)->str:
+    role1 = "system"
+    role2 = "user"
+    ROLE = "role"
+    CONTENT = "content"
+    messages = [
+        {ROLE:role1,CONTENT:f"Create anything you like on the basis of this topic."},
+        {ROLE:role2,CONTENT:topic},
+    ]
+    
+    story_response = get_response(model,messages,None)
+    story = get_choice(story_response).strip().lower()
+    return {"request":topic,"response":story}
 
 def run_nativeLanguagestoryCreation_execution(topic:str,model:str,language:str)->str:
     role1 = "system"
@@ -205,3 +218,7 @@ def read_item(model:str,progress_bar:bool,user_prompts: List[str] = Query(...)):
     
     return results
 
+@app.get("/universalCreator/")
+def read_item(model:str,user_prompt:str):
+    results = run_universalCreation_execution(user_prompt,model)
+    return results
