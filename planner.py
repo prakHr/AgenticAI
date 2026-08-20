@@ -112,6 +112,22 @@ def run_nativeLanguagestoryCreation_execution(topic:str,model:str,language:str)-
     story = get_choice(story_response).strip().lower()
     return {"request":topic,"response":story,"language":language}
 
+def run_topicCreation_execution(user_prompt:str,model:str)->str:
+    role1 = "system"
+    role2 = "user"
+    ROLE = "role"
+    CONTENT = "content"
+    messages = [
+        {ROLE:role1,CONTENT:f"Suggest only 1 topic in 2-3 words on the basis of this prompt."},
+        {ROLE:role2,CONTENT:user_prompt},
+    ]
+    
+    topic_response = get_response(model,messages,None)
+    topic = get_choice(topic_response).strip().lower()
+    return {"request":user_prompt,"response":topic}
+
+
+
 
 app = FastAPI()
 
@@ -167,5 +183,25 @@ def read_item(model:str,topic:str):
 @app.get("/nativeLanguageStoryCreator/")
 def read_item(model:str,topic:str,language:str):
     results = run_nativeLanguagestoryCreation_execution(topic,model,language)
+    return results
+
+@app.get("/suggestTopic/")
+def read_item(model:str,user_prompt:str):
+    results = run_topicCreation_execution(user_prompt,model)
+    return results
+
+@app.get("/suggestTopics/")
+def read_item(model:str,progress_bar:bool,user_prompts: List[str] = Query(...)):
+    num_cores = max(min(multiprocessing.cpu_count() // 2, 2),1)
+    results = []
+    for user_prompt in user_prompts:
+        my_dict = {
+            "user_prompt":user_prompt,
+            "model":model
+        }
+        results.append(my_dict)
+    with WorkerPool(n_jobs=num_cores,daemon=False) as pool:
+        results = pool.map(run_topicCreation_execution, results, progress_bar=progress_bar)
+    
     return results
 
