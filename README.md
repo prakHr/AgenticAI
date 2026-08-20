@@ -1,4 +1,4 @@
-# universal_planner
+<img width="1485" height="527" alt="image" src="https://github.com/user-attachments/assets/a9ad9d70-0baa-4706-86fc-42bc9306043f" /># universal_planner
 Created a planner and created a api for the same using ML
 
 # Created a planner in universal way 
@@ -12,3 +12,5 @@ Created a planner and created a api for the same using ML
 ```powershell
 # uvicorn planner:app --reload
 ```
+
+<img width="1227" height="527" alt="image" src="https://github.com/user-attachments/assets/02c4f2bd-f878-4359-8f20-d0f9ec774e4a" />
