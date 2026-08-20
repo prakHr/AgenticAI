@@ -1,4 +1,4 @@
-<img width="1485" height="527" alt="image" src="https://github.com/user-attachments/assets/a9ad9d70-0baa-4706-86fc-42bc9306043f" /># universal_planner
+<img width="1467" height="872" alt="image" src="https://github.com/user-attachments/assets/c1a036ba-1936-472b-996b-dda94f295d50" /><img width="1485" height="527" alt="image" src="https://github.com/user-attachments/assets/a9ad9d70-0baa-4706-86fc-42bc9306043f" /># universal_planner
 Created a planner and created a api for the same using ML
 
 # Created a planner in universal way 
@@ -16,4 +16,8 @@ Created a planner and created a api for the same using ML
 # uvicorn planner:app --reload
 ```
 
+3. Universal Classification
 <img width="1227" height="527" alt="image" src="https://github.com/user-attachments/assets/02c4f2bd-f878-4359-8f20-d0f9ec774e4a" />
+
+4. Scaled Version of Universal Classification
+<img width="1227" height="527" alt="image" src="https://github.com/user-attachments/assets/48c4b0cb-18e1-4a5b-a3a0-253fb62269b1" />
