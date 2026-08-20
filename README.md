@@ -8,7 +8,7 @@ Created a planner and created a api for the same using ML
 
 <img width="1227" height="418" alt="image" src="https://github.com/user-attachments/assets/0ef5a47e-af2a-4027-a019-377219eb3a61" />
 
-<img width="1227" height="1017" alt="image" src="https://github.com/user-attachments/assets/0ace2a8a-130d-46fd-9e5f-759baadf3026" />
+<img width="1227" height="636" alt="image" src="https://github.com/user-attachments/assets/0ace2a8a-130d-46fd-9e5f-759baadf3026" />
 
 
 # Command to Run
