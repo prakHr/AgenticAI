@@ -148,7 +148,7 @@ def summarize(worker_state, page_content):
 
 def get_list_of_dicts(folder_path,progress_bar):
     files = get_files(folder_path)
-    num_cores = min(multiprocessing.cpu_count()//2,2)
+    num_cores = max(min(multiprocessing.cpu_count() // 2, 2),1)
 
     results = []
     for tmp_result in files:
@@ -217,11 +217,14 @@ def modify_docs(documents):
         rv.append(my_dict2)
     return rv,st
 
-def create_rag_pipeline(documents,st,COLLECTION_NAME,EMBEDDING_SIZE,query,top_k):
+def create_rag_pipeline(folder_path,progress_bar,COLLECTION_NAME,EMBEDDING_SIZE,query,top_k):
+    documents,st = get_list_of_dicts(folder_path,progress_bar)
+
     
     client = QdrantClient(
         url=QDRANT_URL,
-        api_key=QDRANT_API_KEY
+        api_key=QDRANT_API_KEY,
+        timeout=60
     )
 
     if client.collection_exists(COLLECTION_NAME):
@@ -305,7 +308,8 @@ def create_rag_pipeline(documents,st,COLLECTION_NAME,EMBEDDING_SIZE,query,top_k)
     results = search_with_filter(query, filters,top_k)
 
     
-
+    if top_k>100:
+        return results
 
     reranker = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
     
@@ -319,6 +323,7 @@ def create_rag_pipeline(documents,st,COLLECTION_NAME,EMBEDDING_SIZE,query,top_k)
             (query, document_text)
         )
 
+    
     rerank_scores = reranker.predict(rerank_candidates)
 
     reranked_results = []
@@ -340,16 +345,14 @@ def create_rag_pipeline(documents,st,COLLECTION_NAME,EMBEDDING_SIZE,query,top_k)
         t = result
         results.append(t)
     
-
     return results
 
 if __name__=="__main__":
     folder_path = r"C:\Users\gprak\Downloads\Github Repos"
     progress_bar = True
-    results,st = get_list_of_dicts(folder_path,progress_bar)
     COLLECTION_NAME = "knowledge_filter"
     EMBEDDING_SIZE = 384
     simple_query = "Give details about python."
     top_k = 3
-    results = create_rag_pipeline(results,st,COLLECTION_NAME,EMBEDDING_SIZE,simple_query,top_k)
+    results = create_rag_pipeline(folder_path,progress_bar,COLLECTION_NAME,EMBEDDING_SIZE,simple_query,top_k)
     print(results)
