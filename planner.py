@@ -97,13 +97,13 @@ def run_storyCreation_execution(topic:str,model:str)->str:
     story = get_choice(story_response).strip().lower()
     return {"request":topic,"response":story}
 
-def run_universalCreation_execution(topic:str,model:str)->str:
+def run_universalCreation_execution(topic:str,model:str,topic_type:str)->str:
     role1 = "system"
     role2 = "user"
     ROLE = "role"
     CONTENT = "content"
     messages = [
-        {ROLE:role1,CONTENT:f"Create anything you like on the basis of this topic."},
+        {ROLE:role1,CONTENT:f"Create a {topic_type} on the basis of this topic."},
         {ROLE:role2,CONTENT:topic},
     ]
     
@@ -139,7 +139,19 @@ def run_topicCreation_execution(user_prompt:str,model:str)->str:
     topic = get_choice(topic_response).strip().lower()
     return {"request":user_prompt,"response":topic}
 
-
+def run_videoLinksSuggestion_execution(user_prompt:str,model:str)->str:
+    role1 = "system"
+    role2 = "user"
+    ROLE = "role"
+    CONTENT = "content"
+    messages = [
+        {ROLE:role1,CONTENT:f"Suggest some youtube videos on the basis of this prompt."},
+        {ROLE:role2,CONTENT:user_prompt},
+    ]
+    
+    topic_response = get_response(model,messages,None)
+    topic = get_choice(topic_response)
+    return {"request":user_prompt,"response":topic}
 
 
 app = FastAPI()
@@ -219,6 +231,11 @@ def read_item(model:str,progress_bar:bool,user_prompts: List[str] = Query(...)):
     return results
 
 @app.get("/universalCreator/")
+def read_item(model:str,user_prompt:str,topic_type:str):
+    results = run_universalCreation_execution(user_prompt,model,topic_type)
+    return results
+
+@app.get("/videoLinksSuggestion/")
 def read_item(model:str,user_prompt:str):
-    results = run_universalCreation_execution(user_prompt,model)
+    results = run_videoLinksSuggestion_execution(user_prompt,model)
     return results
