@@ -74,7 +74,6 @@ def run_classification_execution(user_prompt:str,model:str,labels:list)->str:
     role2 = "user"
     ROLE = "role"
     CONTENT = "content"
-    # model="openai/gpt-oss-120b"
     messages = [
         {ROLE:role1,CONTENT:f"Classify the request into one of {labels}. Reply with just the label."},
         {ROLE:role2,CONTENT:user_prompt},
@@ -83,6 +82,35 @@ def run_classification_execution(user_prompt:str,model:str,labels:list)->str:
     route_response = get_response(model,messages,None)
     label = get_choice(route_response).strip().lower()
     return {"request":user_prompt,"response":label}
+
+def run_storyCreation_execution(topic:str,model:str)->str:
+    role1 = "system"
+    role2 = "user"
+    ROLE = "role"
+    CONTENT = "content"
+    messages = [
+        {ROLE:role1,CONTENT:f"Create a story on the basis of this topic."},
+        {ROLE:role2,CONTENT:topic},
+    ]
+    
+    story_response = get_response(model,messages,None)
+    story = get_choice(story_response).strip().lower()
+    return {"request":topic,"response":story}
+
+
+def run_nativeLanguagestoryCreation_execution(topic:str,model:str,language:str)->str:
+    role1 = "system"
+    role2 = "user"
+    ROLE = "role"
+    CONTENT = "content"
+    messages = [
+        {ROLE:role1,CONTENT:f"Create a story on the basis of this topic in this native language {language}."},
+        {ROLE:role2,CONTENT:topic},
+    ]
+    
+    story_response = get_response(model,messages,None)
+    story = get_choice(story_response).strip().lower()
+    return {"request":topic,"response":story,"language":language}
 
 
 app = FastAPI()
@@ -98,6 +126,8 @@ def read_item(plan: str,model:str):
 
 @app.get("/planners/")
 def read_item(model:str,progress_bar:bool,plan: List[str] = Query(...)):
+    if len(plan)>3:
+        return {"request":plan,"response":"Price will go up. It is free plan!"}
     num_cores = max(min(multiprocessing.cpu_count() // 2, 2),1)
     results = [{"goal" : g, "model" : model} for g in plan]
     with WorkerPool(n_jobs=num_cores,daemon=False) as pool:
@@ -127,6 +157,15 @@ def read_item(model:str,progress_bar:bool,user_prompts: List[str] = Query(...),l
         results.append(my_dict)
     with WorkerPool(n_jobs=num_cores,daemon=False) as pool:
         results = pool.map(run_classification_execution, results, progress_bar=progress_bar)
-    
+    return results
+
+@app.get("/storyCreator/")
+def read_item(model:str,topic:str):
+    results = run_storyCreation_execution(topic,model)
+    return results
+
+@app.get("/nativeLanguageStoryCreator/")
+def read_item(model:str,topic:str,language:str):
+    results = run_nativeLanguagestoryCreation_execution(topic,model,language)
     return results
 
