@@ -67,3 +67,22 @@ def read_item(model:str,user_prompt:str,labels: List[str] = Query(...)):
     results = run_classification_execution(user_prompt,model,labels)
     return results
 
+@app.get("/classifies/")
+def read_item(model:str,progress_bar:bool,user_prompts: List[str] = Query(...),labels: List[str] = Query(...)):
+    labels.append("other")
+    labels = list(set([l.lower() for l in labels]))
+    num_cores = max(min(multiprocessing.cpu_count() // 2, 2),1)
+    results = []
+    for user_prompt in user_prompts:
+        my_dict = {
+            "user_prompt":user_prompt,
+            "model":model,
+            "labels":labels
+        }
+        results.append(my_dict)
+    with WorkerPool(n_jobs=num_cores,daemon=False) as pool:
+        results = pool.map(run_classification_execution, results, progress_bar=progress_bar)    
+    return results
+
+
+
