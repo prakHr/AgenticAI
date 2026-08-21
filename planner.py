@@ -34,7 +34,7 @@ def get_choice(response):
 
 def get_response(model,messages,response_format):
     if response_format:
-        return client.chat.completions.create(model=model, messages=messages,response_format = response_format)
+        return client.chat.completions.create(model=model, messages=messages, response_format=response_format)
     return client.chat.completions.create(model=model, messages=messages)
     
 def run_planner_execution(goal:str,model:str)->str:
@@ -43,7 +43,6 @@ def run_planner_execution(goal:str,model:str)->str:
     role2 = "user"
     ROLE = "role"
     CONTENT = "content"
-    # model="openai/gpt-oss-120b"
     messages = [
         {ROLE:role1,CONTENT:"Break the goal into atomic steps. Return a JSON object with a key named 'steps' whose value is an array of strings. Example: {\"steps\": [\"Step 1\", \"Step 2\", \"Step 3\"]}."},
         {ROLE:role2,CONTENT:goal},
@@ -153,6 +152,49 @@ def run_videoLinksSuggestion_execution(user_prompt:str,model:str)->str:
     topic = get_choice(topic_response)
     return {"request":user_prompt,"response":topic}
 
+def run_gameRulesLearner_execution(game_topic:str,model:str)->str:
+    role1 = "system"
+    role2 = "user"
+    ROLE = "role"
+    CONTENT = "content"
+    messages = [
+        {ROLE:role1,CONTENT:f"Give clear game rules on how to approach this game. Keep it as short and concise and to the point as possible."},
+        {ROLE:role2,CONTENT:game_topic},
+    ]
+    
+    topic_response = get_response(model,messages,None)
+    topic = get_choice(topic_response)
+    return {"request":game_topic,"response":topic}
+
+def run_gymExercisesDoer_execution(gym_day:str,model:str)->str:
+    role1 = "system"
+    role2 = "user"
+    ROLE = "role"
+    CONTENT = "content"
+    messages = [
+        {ROLE:role1,CONTENT:f"Suggest gym exercises on the basis of a particular gym day."},
+        {ROLE:role2,CONTENT:gym_day},
+    ]
+    
+    topic_response = get_response(model,messages,None)
+    topic = get_choice(topic_response)
+    return {"request":gym_day,"response":topic}
+    
+
+def run_dayTaskDoer_execution(day:str,model:str)->str:
+    role1 = "system"
+    role2 = "user"
+    ROLE = "role"
+    CONTENT = "content"
+    messages = [
+        {ROLE:role1,CONTENT:f"Suggest some priority tasks to do in your free time on the basis of a particular day."},
+        {ROLE:role2,CONTENT:day},
+    ]
+    
+    topic_response = get_response(model,messages,None)
+    topic = get_choice(topic_response)
+    return {"request":day,"response":topic}
+    
 
 app = FastAPI()
 
@@ -206,7 +248,7 @@ def read_item(model:str,topic:str):
     return results
 
 @app.get("/storyCreators/")
-def read_item(model:str,progress_bar:bool,topics:: List[str] = Query(...)):
+def read_item(model:str,progress_bar:bool,topics: List[str] = Query(...)):
     num_cores = max(min(multiprocessing.cpu_count() // 2, 2),1)
     results = []
     for topic in topics:
@@ -226,7 +268,7 @@ def read_item(model:str,topic:str,language:str):
     return results
 
 @app.get("/nativeLanguageStoryCreators/")
-def read_item(model:str,language:str,progress_bar:bool,topics:: List[str] = Query(...)):
+def read_item(model:str,language:str,progress_bar:bool,topics: List[str] = Query(...)):
     num_cores = max(min(multiprocessing.cpu_count() // 2, 2),1)
     results = []
     for topic in topics:
@@ -248,20 +290,6 @@ def read_item(model:str,user_prompt:str):
     results = run_topicCreation_execution(user_prompt,model)
     return results
 
-@app.get("/suggestTopics/")
-def read_item(model:str,user_prompt:str,n:int,progress_bar:bool):
-    num_cores = max(min(multiprocessing.cpu_count() // 2, 2),1)
-    results = []
-    for i in range(n):
-        my_dict = {
-            "user_prompt":user_prompt,
-            "model":model
-        }
-        results.append(my_dict)
-    with WorkerPool(n_jobs=num_cores,daemon=False) as pool:
-        results = pool.map(run_topicCreation_execution, results, progress_bar=progress_bar)
-    
-    return results
 
 @app.get("/suggestTopics/")
 def read_item(model:str,progress_bar:bool,user_prompts: List[str] = Query(...)):
@@ -289,7 +317,7 @@ def read_item(model:str,progress_bar:bool,user_prompt:str,topic_types:List[str] 
     results = []
     for topic_type in topic_types:
         my_dict = {
-            "user_prompt":user_prompt,
+            "topic":user_prompt,
             "model":model,
             "topic_type":topic_type
         }
@@ -304,7 +332,7 @@ def read_item(model:str,user_prompt:str):
     return results
 
 @app.get("/videoLinksSuggestions/")
-def read_item(model:str,user_prompts:str,progress_bar:bool):
+def read_item(model:str,progress_bar:bool,user_prompts:List[str] = Query(...)):
     num_cores = max(min(multiprocessing.cpu_count() // 2, 2),1)
     results = []
     for user_prompt in user_prompts:
@@ -316,4 +344,74 @@ def read_item(model:str,user_prompts:str,progress_bar:bool):
     with WorkerPool(n_jobs=num_cores,daemon=False) as pool:
         results = pool.map(run_videoLinksSuggestion_execution, results, progress_bar=progress_bar)
     return results
+
+
+@app.get("/learnGameRules/")
+def read_item(model:str,game_topic:str):
+    results = run_gameRulesLearner_execution(game_topic,model)
+    return results
     
+@app.get("/learnMultipleGameRules/")
+def read_item(model:str,progress_bar:bool,game_topics:List[str] = Query(...)):
+    num_cores = max(min(multiprocessing.cpu_count() // 2, 2),1)
+    results = []
+    for game_topic in game_topics:
+        my_dict = {
+            "game_topic":game_topic,
+            "model":model
+        }
+        results.append(my_dict)
+    with WorkerPool(n_jobs=num_cores,daemon=False) as pool:
+        results = pool.map(run_gameRulesLearner_execution, results, progress_bar=progress_bar)
+    return results
+
+def check(gym_day,available_days):
+    if gym_day not in available_days:
+        return False
+    return True
+
+@app.get("/suggestGymExercises/")
+def read_item(model:str,gym_day:str):
+    available_days = ["Monday","Tuesday","Wednesday","Thursday","Friday"]    
+    if not check(gym_day,available_days):
+        return {"request":gym_day,"response":f"Please input one of these days only :- {available_days}"}
+    results = run_gymExercisesDoer_execution(gym_day,model)
+    return results
+        
+@app.get("/suggestMultipleGymExercises/")
+def read_item(model:str,progress_bar:bool,gym_days:List[str] = Query(...)):
+    available_days = ["Monday","Tuesday","Wednesday","Thursday","Friday"]    
+    num_cores = max(min(multiprocessing.cpu_count() // 2, 2),1)
+    results = []
+    for gym_day in gym_days:
+        if not check(gym_day,available_days):
+            return {"request":gym_day,"response":f"Please input one of these days only :- {available_days}"}
+        my_dict = {
+            "gym_day":gym_day,
+            "model":model
+        }
+        results.append(my_dict)
+    with WorkerPool(n_jobs=num_cores,daemon=False) as pool:
+        results = pool.map(run_gymExercisesDoer_execution, results, progress_bar=progress_bar)
+    return results
+        
+@app.get("/suggestUniversalDays/")
+def read_item(model:str,day:str):
+    available_days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]  
+    if not check(day,available_days):
+        return {"request":day,"response":f"Please input one of these days only :- {available_days}"}
+    results = run_dayTaskDoer_execution(day,model)
+    return results
+
+        
+
+
+
+
+
+
+
+
+
+
+
