@@ -205,14 +205,62 @@ def read_item(model:str,topic:str):
     results = run_storyCreation_execution(topic,model)
     return results
 
+@app.get("/storyCreators/")
+def read_item(model:str,progress_bar:bool,topics:: List[str] = Query(...)):
+    num_cores = max(min(multiprocessing.cpu_count() // 2, 2),1)
+    results = []
+    for topic in topics:
+        my_dict = {
+            "topic":topic,
+            "model":model
+        }
+        results.append(my_dict)
+    with WorkerPool(n_jobs=num_cores,daemon=False) as pool:
+        results = pool.map(run_storyCreation_execution, results, progress_bar=progress_bar)
+    return results
+
+
 @app.get("/nativeLanguageStoryCreator/")
 def read_item(model:str,topic:str,language:str):
     results = run_nativeLanguagestoryCreation_execution(topic,model,language)
     return results
 
+@app.get("/nativeLanguageStoryCreators/")
+def read_item(model:str,language:str,progress_bar:bool,topics:: List[str] = Query(...)):
+    num_cores = max(min(multiprocessing.cpu_count() // 2, 2),1)
+    results = []
+    for topic in topics:
+        my_dict = {
+            "topic":topic,
+            "model":model,
+            "language":language
+        }
+        results.append(my_dict)
+    with WorkerPool(n_jobs=num_cores,daemon=False) as pool:
+        results = pool.map(run_nativeLanguagestoryCreation_execution, results, progress_bar=progress_bar)
+    return results
+
+    
+
+
 @app.get("/suggestTopic/")
 def read_item(model:str,user_prompt:str):
     results = run_topicCreation_execution(user_prompt,model)
+    return results
+
+@app.get("/suggestTopics/")
+def read_item(model:str,user_prompt:str,n:int,progress_bar:bool):
+    num_cores = max(min(multiprocessing.cpu_count() // 2, 2),1)
+    results = []
+    for i in range(n):
+        my_dict = {
+            "user_prompt":user_prompt,
+            "model":model
+        }
+        results.append(my_dict)
+    with WorkerPool(n_jobs=num_cores,daemon=False) as pool:
+        results = pool.map(run_topicCreation_execution, results, progress_bar=progress_bar)
+    
     return results
 
 @app.get("/suggestTopics/")
@@ -235,7 +283,37 @@ def read_item(model:str,user_prompt:str,topic_type:str):
     results = run_universalCreation_execution(user_prompt,model,topic_type)
     return results
 
+@app.get("/universalCreators/")
+def read_item(model:str,progress_bar:bool,user_prompt:str,topic_types:List[str] = Query(...)):
+    num_cores = max(min(multiprocessing.cpu_count() // 2, 2),1)
+    results = []
+    for topic_type in topic_types:
+        my_dict = {
+            "user_prompt":user_prompt,
+            "model":model,
+            "topic_type":topic_type
+        }
+        results.append(my_dict)
+    with WorkerPool(n_jobs=num_cores,daemon=False) as pool:
+        results = pool.map(run_universalCreation_execution, results, progress_bar=progress_bar)
+    return results
+
 @app.get("/videoLinksSuggestion/")
 def read_item(model:str,user_prompt:str):
     results = run_videoLinksSuggestion_execution(user_prompt,model)
     return results
+
+@app.get("/videoLinksSuggestions/")
+def read_item(model:str,user_prompts:str,progress_bar:bool):
+    num_cores = max(min(multiprocessing.cpu_count() // 2, 2),1)
+    results = []
+    for user_prompt in user_prompts:
+        my_dict = {
+            "user_prompt":user_prompt,
+            "model":model
+        }
+        results.append(my_dict)
+    with WorkerPool(n_jobs=num_cores,daemon=False) as pool:
+        results = pool.map(run_videoLinksSuggestion_execution, results, progress_bar=progress_bar)
+    return results
+    
