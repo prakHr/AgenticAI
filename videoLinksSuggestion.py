@@ -1,4 +1,4 @@
-# uvicorn planner:app --reload
+# uvicorn videoLinksSuggestion:app --reload
 
 import os
 from pathlib import Path

@@ -1,4 +1,4 @@
-# uvicorn planner:app --reload
+# uvicorn universalCreators:app --reload
 
 import os
 from pathlib import Path
