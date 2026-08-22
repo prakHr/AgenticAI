@@ -13,7 +13,7 @@ Created a planner and created a api for the same using ML
 
 # Command to Run
 ```powershell
-# uvicorn planner:app --reload
+# uvicorn <filename>:app --reload
 ```
 
 3. Universal Classification
