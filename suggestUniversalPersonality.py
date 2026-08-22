@@ -54,7 +54,17 @@ def run_suggestUniversalPersonality_execution(country_name:str,model:str)->str:
     return {"request":r,"response":topic}
 
 
-app = FastAPI()
+from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
+
+app = FastAPI(
+    title="My API",
+    version="1.0.0"
+)
+
+@app.get("/", include_in_schema=False)
+async def redirect_to_docs():
+    return RedirectResponse(url="/docs")
 
 
 

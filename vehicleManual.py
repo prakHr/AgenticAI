@@ -53,8 +53,17 @@ def run_vehicleManual_execution(vehicle_type:str,model:str)->str:
     return {"request":vehicle_type,"response":topic}
 
 
-app = FastAPI()
+from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
 
+app = FastAPI(
+    title="My API",
+    version="1.0.0"
+)
+
+@app.get("/", include_in_schema=False)
+async def redirect_to_docs():
+    return RedirectResponse(url="/docs")
 
 
 @app.get("/vehicleManual/")

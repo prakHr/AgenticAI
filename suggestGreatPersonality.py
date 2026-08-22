@@ -53,8 +53,17 @@ def run_suggestGreatPersonality_execution(sport:str,country_name:str,model:str)-
     topic = get_choice(topic_response)
     return {"request":r,"response":topic}
 
+from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
 
-app = FastAPI()
+app = FastAPI(
+    title="My API",
+    version="1.0.0"
+)
+
+@app.get("/", include_in_schema=False)
+async def redirect_to_docs():
+    return RedirectResponse(url="/docs")
 
 
 

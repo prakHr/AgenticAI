@@ -52,8 +52,17 @@ def run_musicChoreography_execution(music_type:str,model:str)->str:
     topic = get_choice(topic_response)
     return {"request":music_type,"response":topic}
 
+from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
 
-app = FastAPI()
+app = FastAPI(
+    title="My API",
+    version="1.0.0"
+)
+
+@app.get("/", include_in_schema=False)
+async def redirect_to_docs():
+    return RedirectResponse(url="/docs")
 
 @app.get("/break1")
 def read_root():

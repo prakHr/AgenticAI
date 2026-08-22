@@ -51,9 +51,18 @@ def run_gymExercisesDoer_execution(gym_day:str,model:str)->str:
     topic = get_choice(topic_response)
     return {"request":gym_day,"response":topic}
     
+from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
 
-app = FastAPI()
+app = FastAPI(
+    title="My API",
+    version="1.0.0"
+)
 
+@app.get("/", include_in_schema=False)
+async def redirect_to_docs():
+    return RedirectResponse(url="/docs")
+    
 @app.get("/")
 def read_root():
     return {"Hello": "World"}

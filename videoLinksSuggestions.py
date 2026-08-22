@@ -51,12 +51,17 @@ def run_videoLinksSuggestion_execution(user_prompt:str,model:str)->str:
     topic = get_choice(topic_response)
     return {"request":user_prompt,"response":topic}
 
+from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
 
-app = FastAPI()
+app = FastAPI(
+    title="My API",
+    version="1.0.0"
+)
 
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
+@app.get("/", include_in_schema=False)
+async def redirect_to_docs():
+    return RedirectResponse(url="/docs")
 
 
 @app.get("/videoLinksSuggestions/")

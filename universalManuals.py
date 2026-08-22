@@ -53,9 +53,17 @@ def run_universalManual_execution(universal_type:str,model:str)->str:
     return {"request":universal_type,"response":topic}
 
 
-app = FastAPI()
+from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
 
+app = FastAPI(
+    title="My API",
+    version="1.0.0"
+)
 
+@app.get("/", include_in_schema=False)
+async def redirect_to_docs():
+    return RedirectResponse(url="/docs")
 
 @app.get("/universalManuals/")
 def read_item(model:str,progress_bar:bool,universal_types: List[str] = Query(...)):
