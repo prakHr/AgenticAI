@@ -37,7 +37,7 @@ def get_response(model,messages,response_format):
         return client.chat.completions.create(model=model, messages=messages, response_format=response_format)
     return client.chat.completions.create(model=model, messages=messages)
     
-def run_videoLinksSuggestion_execution(movie_genre:str,model:str)->str:
+def run_movieSuggestion_execution(movie_genre:str,model:str)->str:
     role1 = "system"
     role2 = "user"
     ROLE = "role"
@@ -55,8 +55,9 @@ def run_videoLinksSuggestion_execution(movie_genre:str,model:str)->str:
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 
+filename = os.path.basename(__file__).split(".")[0]
 app = FastAPI(
-    title="My API",
+    title=f"{filename}",
     version="1.0.0"
 )
 
@@ -66,7 +67,7 @@ async def redirect_to_docs():
 
 @app.get("/movieRecommender/")
 def read_item(model:str,movie_genre:str):
-    results = run_videoLinksSuggestion_execution(movie_genre,model)
+    results = run_movieSuggestion_execution(movie_genre,model)
     return results
 
 
