@@ -67,7 +67,7 @@ async def redirect_to_docs():
 
 @app.get("/songRecommender/")
 def read_item(model:str,song_genre:str):
-    results = run_movieSuggestion_execution(song_genre,model)
+    results = run_songSuggestion_execution(song_genre,model)
     return results
 
 
