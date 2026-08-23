@@ -71,7 +71,33 @@ app = FastAPI(
 async def redirect_to_docs():
     return RedirectResponse(url="/docs")
 
-@app.get("/askAboutPlanetElement/")
-def read_item(model:str,element_name:str,planet_name:str):
-    results = run_askElementDetails_execution(element_name,planet_name,model)
+@app.get("/askAboutPlanetElements_type1/")
+def read_item(model:str,progress_bar:bool,planet_name:str,element_names:List[str] = Query(...)):
+    num_cores = max(min(multiprocessing.cpu_count() // 2, 2),1)
+    results = []
+    for element_name in element_names:
+        my_dict = {
+            "element_name":element_name,
+            "planet_name":planet_name,
+            "model":model
+        }
+        results.append(my_dict)
+    with WorkerPool(n_jobs=num_cores,daemon=False) as pool:
+        results = pool.map(run_askElementDetails_execution, results, progress_bar=progress_bar)
+    return results
+
+
+@app.get("/askAboutPlanetElements_type2/")
+def read_item(model:str,progress_bar:bool,element_name:str,planet_names:List[str] = Query(...)):
+    num_cores = max(min(multiprocessing.cpu_count() // 2, 2),1)
+    results = []
+    for planet_name in planet_names:
+        my_dict = {
+            "element_name":element_name,
+            "planet_name":planet_name,
+            "model":model
+        }
+        results.append(my_dict)
+    with WorkerPool(n_jobs=num_cores,daemon=False) as pool:
+        results = pool.map(run_askElementDetails_execution, results, progress_bar=progress_bar)
     return results

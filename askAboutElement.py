@@ -44,7 +44,7 @@ def run_askElementDetails_execution(element_name:str,model:str)->str:
     ROLE = "role"
     CONTENT = "content"
     messages = [
-        {ROLE:role1,CONTENT:f"Tell me the brief and concise point to point details of element present in the world. Only give ans if it is a valid type of element. Please do not hallucinate."},
+        {ROLE:role1,CONTENT:f"Tell me the brief and concise point to point details of element present in the body of earth. Only give ans if it is a valid type of element. Please do not hallucinate."},
         {ROLE:role2,CONTENT:element_name},
     ]
     
