@@ -51,8 +51,12 @@ def run_gameRulesLearner_execution(game_topic:str,model:str)->str:
     topic = get_choice(topic_response)
     return {"request":game_topic,"response":topic}
 
+filename = os.path.basename(__file__).split(".")[0]
+app = FastAPI(
+    title=f"{filename}",
+    version="1.0.0"
+)
 
-app = FastAPI()
 
 @app.get("/")
 def read_root():

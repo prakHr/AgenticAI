@@ -54,8 +54,9 @@ def run_gymExercisesDoer_execution(gym_day:str,model:str)->str:
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 
+filename = os.path.basename(__file__).split(".")[0]
 app = FastAPI(
-    title="My API",
+    title=f"{filename}",
     version="1.0.0"
 )
 

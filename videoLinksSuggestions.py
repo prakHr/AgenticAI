@@ -54,10 +54,12 @@ def run_videoLinksSuggestion_execution(user_prompt:str,model:str)->str:
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 
+filename = os.path.basename(__file__).split(".")[0]
 app = FastAPI(
-    title="My API",
+    title=f"{filename}",
     version="1.0.0"
 )
+
 
 @app.get("/", include_in_schema=False)
 async def redirect_to_docs():
