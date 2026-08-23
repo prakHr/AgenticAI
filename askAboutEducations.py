@@ -65,7 +65,7 @@ app = FastAPI(
 async def redirect_to_docs():
     return RedirectResponse(url="/docs")
 
-@app.get("/askAboutEducation/")
+@app.get("/askAboutEducations/")
 def read_item(model:str,progress_bar:bool,subject_names:List[str] = Query(...)):
     num_cores = max(min(multiprocessing.cpu_count() // 2, 2),1)
     results = []
