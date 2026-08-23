@@ -69,6 +69,7 @@ async def redirect_to_docs():
 
 @app.get("/universalRecommenders_type1/")
 def read_item(model:str,genre:str,progress_bar:bool,styles: List[str] = Query(...)):
+    num_cores = max(min(multiprocessing.cpu_count() // 2, 2),1)
     results = []
     for style in styles:
         my_dict = {
@@ -83,6 +84,7 @@ def read_item(model:str,genre:str,progress_bar:bool,styles: List[str] = Query(..
 
 @app.get("/universalRecommenders_type2/")
 def read_item(model:str,style:str,progress_bar:bool,genres: List[str] = Query(...)):
+    num_cores = max(min(multiprocessing.cpu_count() // 2, 2),1)
     results = []
     for genre in genres:
         my_dict = {
