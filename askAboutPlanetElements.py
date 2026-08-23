@@ -1,4 +1,4 @@
-# uvicorn askAboutPlanetElement:app --reload
+# uvicorn askAboutPlanetElements:app --reload
 
 import os
 from pathlib import Path
