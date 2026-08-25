@@ -1,4 +1,35 @@
 import os
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["TRANSFORMERS_VERBOSITY"] = "error"
+
+from transformers import logging as hf_logging
+
+hf_logging.set_verbosity_error()
+
+from pprint import pprint
+
+import mpire
+os.environ["OMP_NUM_THREADS"] = "1"
+import time
+import multiprocessing 
+from mpire import WorkerPool
+from pprint import pprint
+from multiprocessing import Manager
+from transformers import pipeline, AutoTokenizer
+
+
+
+from dotenv import load_dotenv
+from sentence_transformers import SentenceTransformer
+from groq import Groq
+
 import json
 import requests
 import multiprocessing
@@ -6,9 +37,8 @@ import multiprocessing
 from urllib.parse import urljoin, urlparse, parse_qs
 
 from bs4 import BeautifulSoup
-from dotenv import load_dotenv
-from groq import Groq
-from mpire import WorkerPool
+
+
 
 
 # ============================================================
@@ -26,9 +56,43 @@ if not api_key:
 
 client = Groq(api_key=api_key)
 
-model = "openai/gpt-oss-120b"
+
+def get_choice(response):
+    return response.choices[0].message.content
+
+def get_response(model,messages,response_format):
+    if response_format:
+        return client.chat.completions.create(model=model, messages=messages, response_format=response_format)
+    return client.chat.completions.create(model=model, messages=messages)
+
+def call(system:str,user:str,model:str)->str:
+    messages = [
+        {
+            "role":"system",
+            "content":system
+        },
+        {
+            "role":"user",
+            "content":user
+        }
+    ]
+    response = client.chat.completions.create(model=model, messages=messages)
+    return response.choices[0].message.content
+
+    
+def research_team(task:str,model:str)->str:
+    facts = call("You are a research worker. Return 3 concise bullet facts.",task,model)
+    return call("You are the researcher team lead. Consolidate the bullets into one paragraph.",facts,model)
 
 
+def writing_team(task:str,model:str)->str:
+    draft = call("You are a writing worker. Draft a short paragraph.",task,model)
+    return call("You are the writing team lead. Edit for clarity and tone.",draft,model)
+
+def run_hierarchical(goal:str,model:str)->str:
+    r = research_team(goal,model)
+    draft = writing_team(f"Goal {goal}\nResearch:{r}",model)
+    return call("You are the top-level manager. Approve or refine the final output.",draft,model)
 # ============================================================
 # COMMON HEADERS
 # ============================================================
@@ -331,6 +395,97 @@ tools = [
 ]
 
 
+def load_big_model(worker_state):
+
+    model_name = "facebook/bart-large-cnn"
+
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+    worker_state["tokenizer"] = tokenizer
+
+    worker_state["summarizer"] = pipeline(
+        "summarization",
+        model=model_name,
+        tokenizer=tokenizer,
+        device=-1
+    )    
+
+
+def chunk_text(tokenizer, text, chunk_size=700):
+
+    tokens = tokenizer.encode(
+        text,
+        add_special_tokens=False
+    )
+
+    chunks = []
+
+    for i in range(0, len(tokens), chunk_size):
+
+        chunk_tokens = tokens[i:i + chunk_size]
+
+        chunk = tokenizer.decode(
+            chunk_tokens,
+            skip_special_tokens=True
+        )
+
+        if chunk.strip():
+            chunks.append(chunk)
+
+    return chunks
+
+
+def summarize(worker_state, page_content):
+
+    summarizer = worker_state["summarizer"]
+    tokenizer = worker_state["tokenizer"]
+
+    text = page_content.strip()
+
+    if not text:
+        return ""
+
+    chunks = chunk_text(
+        tokenizer,
+        text,
+        chunk_size=700
+    )
+
+    summaries = []
+
+    for chunk in chunks:
+
+        input_length = len(chunk.split())
+
+        max_len = min(
+            100,
+            max(30, int(input_length * 0.6))
+        )
+
+        min_len = min(
+            30,
+            max(10, int(max_len * 0.4))
+        )
+
+        if min_len >= max_len:
+            min_len = max(5, max_len // 2)
+
+        summary = summarizer(
+            chunk,
+            max_length=max_len,
+            min_length=min_len,
+            do_sample=False,
+            truncation=True
+        )
+
+        summaries.append(
+            summary[0]["summary_text"]
+        )
+
+
+    return " ".join(summaries)
+
+
 # ============================================================
 # MAIN
 # ============================================================
@@ -340,6 +495,7 @@ if __name__ == "__main__":
     # ========================================================
     # USER QUERY
     # ========================================================
+    model = "openai/gpt-oss-120b"
 
     query = input(
         "What do you want to search for? "
@@ -491,11 +647,11 @@ if __name__ == "__main__":
 
     else:
 
+
         print(
             "\nThe model did not call search_web."
         )
-
-
+        
     # ========================================================
     # SHOW URLS
     # ========================================================
@@ -577,7 +733,7 @@ if __name__ == "__main__":
     # ========================================================
     # PRINT SCRAPED RESULTS
     # ========================================================
-
+    results2 = []
     for result in scraped_results:
 
         print(
@@ -611,6 +767,26 @@ if __name__ == "__main__":
             "LINKS:",
             len(result["links"])
         )
-
+        my_dict = {
+            "page_content":result["text"]
+            
+        }
+        results2.append(my_dict)
 
     
+    
+    # final_ans =  run_hierarchical(text,model)
+
+    
+    results = results2
+        
+        
+    with WorkerPool(n_jobs=num_cores,daemon=False,use_worker_state=True) as pool:
+        results = pool.map(summarize, results, progress_bar = True, worker_init=load_big_model)
+    print("results = ")
+    print(results)
+    if len(results)>0:
+        text = "".join(results)
+        final_ans =  run_hierarchical(text,model)
+        print("final_ans = ")
+        print(final_ans)
