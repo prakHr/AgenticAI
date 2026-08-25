@@ -127,10 +127,7 @@ def search_web(query: str):
 
     response.raise_for_status()
 
-    soup = BeautifulSoup(
-        response.text,
-        "html.parser"
-    )
+    soup = BeautifulSoup(response.text,"html.parser")
 
     results = []
 
@@ -157,13 +154,9 @@ def search_web(query: str):
 
         if url.startswith("//duckduckgo.com/l/"):
 
-            parsed_url = urlparse(
-                "https:" + url
-            )
+            parsed_url = urlparse("https:" + url)
 
-            query_params = parse_qs(
-                parsed_url.query
-            )
+            query_params = parse_qs(parsed_url.query)
 
             if "uddg" in query_params:
 
@@ -251,9 +244,7 @@ def scrape_website(url):
 
         if soup.title:
 
-            title = soup.title.get_text(
-                strip=True
-            )
+            title = soup.title.get_text(strip=True)
 
         # ====================================================
         # REMOVE UNNECESSARY HTML
@@ -290,10 +281,7 @@ def scrape_website(url):
 
         links = []
 
-        for a in soup.find_all(
-            "a",
-            href=True
-        ):
+        for a in soup.find_all("a",href=True):
 
             href = a["href"]
 
@@ -312,13 +300,9 @@ def scrape_website(url):
                 href
             )
 
-            if absolute_url.startswith(
-                ("http://", "https://")
-            ):
+            if absolute_url.startswith(("http://", "https://")):
 
-                links.append(
-                    absolute_url
-                )
+                links.append(absolute_url)
 
         # ====================================================
         # REMOVE DUPLICATE LINKS
@@ -540,15 +524,10 @@ if __name__ == "__main__":
     )
 
     response = client.chat.completions.create(
-
         model=model,
-
         messages=messages,
-
         tools=tools,
-
         tool_choice="auto",
-
         max_tokens=4096,
     )
 
@@ -603,41 +582,27 @@ if __name__ == "__main__":
             # PARSE ARGUMENTS
             # ================================================
 
-            function_args = json.loads(
-                tool_call.function.arguments
-            )
+            function_args = json.loads(tool_call.function.arguments)
 
-            print(
-                "\nTool arguments:"
-            )
+            print("\nTool arguments:")
 
-            print(
-                function_args
-            )
+            print(function_args)
 
             # ================================================
             # EXECUTE TOOL
             # ================================================
 
-            function_response = (
-                function_to_call(
-                    **function_args
-                )
-            )
+            function_response = (function_to_call(**function_args))
 
             # ================================================
             # PRINT SEARCH RESULTS
             # ================================================
 
-            print(
-                "\nSearch results:"
-            )
+            print("\nSearch results:")
 
             for result in function_response:
 
-                print(
-                    result
-                )
+                print(result)
 
                 results.append(
                     {
@@ -648,23 +613,17 @@ if __name__ == "__main__":
     else:
 
 
-        print(
-            "\nThe model did not call search_web."
-        )
+        print("\nThe model did not call search_web.")
         
     # ========================================================
     # SHOW URLS
     # ========================================================
 
-    print(
-        "\nURLs found:"
-    )
+    print("\nURLs found:")
 
     for item in results:
 
-        print(
-            item["url"]
-        )
+        print(item["url"])
 
 
     # ========================================================
@@ -673,9 +632,7 @@ if __name__ == "__main__":
 
     if not results:
 
-        print(
-            "\nNo URLs found."
-        )
+        print("\nNo URLs found.")
 
         exit()
 
@@ -684,50 +641,28 @@ if __name__ == "__main__":
     # NUMBER OF WORKERS
     # ========================================================
 
-    num_cores = max(
-        min(
-            multiprocessing.cpu_count() // 2,
-            2
-        ),
-        1
-    )
+    num_cores = max(min(multiprocessing.cpu_count() // 2,2),1)
 
-    print(
-        f"\nUsing {num_cores} workers"
-    )
+    print(f"\nUsing {num_cores} workers")
 
 
     # ========================================================
     # SCRAPE WEBSITES
     # ========================================================
 
-    print(
-        "\nStarting scraping..."
-    )
+    print("\nStarting scraping...")
 
-    with WorkerPool(
-        n_jobs=num_cores,
-        daemon=False
-    ) as pool:
+    with WorkerPool(n_jobs=num_cores,daemon=False) as pool:
 
-        scraped_results = pool.map(
-            scrape_website,
-            results,
-            progress_bar=True
-        )
+        scraped_results = pool.map(scrape_website,results,progress_bar=True)
 
 
     # ========================================================
     # SCRAPING COMPLETE
     # ========================================================
 
-    print(
-        "\nhere3"
-    )
-
-    print(
-        "\nScraping completed!"
-    )
+    
+    print("\nScraping completed!")
 
 
     # ========================================================
@@ -736,40 +671,21 @@ if __name__ == "__main__":
     results2 = []
     for result in scraped_results:
 
-        print(
-            "\n========================================"
-        )
+        print("\n========================================")
 
-        print(
-            "URL:",
-            result["url"]
-        )
+        print("URL:",result["url"])
 
-        print(
-            "TITLE:",
-            result["title"]
-        )
+        print("TITLE:",result["title"])
 
-        print(
-            "ERROR:",
-            result["error"]
-        )
+        print("ERROR:",result["error"])
 
-        print(
-            "TEXT:"
-        )
+        print("TEXT:")
 
-        print(
-            result["text"][:1000]
-        )
+        print(result["text"][:1000])
 
-        print(
-            "LINKS:",
-            len(result["links"])
-        )
+        print("LINKS:",len(result["links"]))
         my_dict = {
             "page_content":result["text"]
-            
         }
         results2.append(my_dict)
 
