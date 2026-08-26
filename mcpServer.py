@@ -6,7 +6,7 @@ import json
 from fastapi import FastAPI
 import mpire
 import os
-os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["OMP_NUM_THREADS"] = "1"c
 import time
 import multiprocessing 
 from mpire import WorkerPool
