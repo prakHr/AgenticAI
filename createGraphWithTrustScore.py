@@ -30,9 +30,7 @@ if not GROQ_API_KEY:
 # GROQ CLIENT
 # ============================================================
 
-client = Groq(
-    api_key=GROQ_API_KEY
-)
+client = Groq(api_key=GROQ_API_KEY)
 
 
 # ============================================================
@@ -69,93 +67,54 @@ MIN_TRUST = 60.0
 NODE_TRUST_CONFIG = {
 
     "planner": {
-
         "security": 90,
-
         "reliability": 90,
-
         "transparency": 85,
-
         "dependency_health": 90,
-
         "operational_risk": 90,
-
         "data_sensitivity": 90,
-
         "weights": {
-
             "security": 0.25,
-
             "reliability": 0.20,
-
             "transparency": 0.10,
-
             "dependency_health": 0.15,
-
             "operational_risk": 0.15,
-
             "data_sensitivity": 0.15
         }
     },
 
 
     "researcher": {
-
         "security": 85,
-
         "reliability": 85,
-
         "transparency": 80,
-
         "dependency_health": 85,
-
         "operational_risk": 80,
-
         "data_sensitivity": 75,
-
         "weights": {
-
             "security": 0.25,
-
             "reliability": 0.20,
-
             "transparency": 0.10,
-
             "dependency_health": 0.15,
-
             "operational_risk": 0.15,
-
             "data_sensitivity": 0.15
         }
     },
 
 
     "reviewer": {
-
         "security": 95,
-
         "reliability": 90,
-
         "transparency": 90,
-
         "dependency_health": 90,
-
         "operational_risk": 95,
-
         "data_sensitivity": 90,
-
         "weights": {
-
             "security": 0.25,
-
             "reliability": 0.20,
-
             "transparency": 0.10,
-
             "dependency_health": 0.15,
-
             "operational_risk": 0.15,
-
             "data_sensitivity": 0.15
         }
     }
@@ -173,7 +132,6 @@ class State(TypedDict, total=False):
     # --------------------------------------------------------
 
     goal: str
-
     model: str
 
     # --------------------------------------------------------
@@ -193,11 +151,8 @@ class State(TypedDict, total=False):
     # --------------------------------------------------------
 
     trust_score: float
-
     trust_grade: str
-
     trust_approved: bool
-
     trust_status: str
 
     # --------------------------------------------------------
@@ -227,22 +182,16 @@ def calculate_grade(score: float) -> str:
 
     if score >= 95:
         return "A+"
-
     elif score >= 90:
         return "A"
-
     elif score >= 85:
         return "B+"
-
     elif score >= 80:
         return "B"
-
     elif score >= 70:
         return "C"
-
     elif score >= 60:
         return "D"
-
     else:
         return "F"
 
@@ -251,28 +200,19 @@ def calculate_grade(score: float) -> str:
 # TRUST SCORE CALCULATION
 # ============================================================
 
-def calculate_trust_score(
-    node_name: str
-) -> Dict[str, Any]:
+def calculate_trust_score(node_name: str) -> Dict[str, Any]:
 
-    config = NODE_TRUST_CONFIG.get(
-        node_name
-    )
+    config = NODE_TRUST_CONFIG.get(node_name)
 
     # --------------------------------------------------------
     # If node has no configuration
     # --------------------------------------------------------
 
     if not config:
-
         return {
-
             "score": 0.0,
-
             "grade": "F",
-
             "factors": {},
-
             "error": (
                 f"No trust configuration found "
                 f"for node '{node_name}'"
@@ -284,24 +224,12 @@ def calculate_trust_score(
     # --------------------------------------------------------
 
     factors = {
-
         "security": config["security"],
-
         "reliability": config["reliability"],
-
         "transparency": config["transparency"],
-
-        "dependency_health": config[
-            "dependency_health"
-        ],
-
-        "operational_risk": config[
-            "operational_risk"
-        ],
-
-        "data_sensitivity": config[
-            "data_sensitivity"
-        ]
+        "dependency_health": config["dependency_health"],
+        "operational_risk": config["operational_risk"],
+        "data_sensitivity": config["data_sensitivity"]
     }
 
     weights = config["weights"]
@@ -311,35 +239,20 @@ def calculate_trust_score(
     # --------------------------------------------------------
 
     score = 0.0
-
     for factor, value in factors.items():
-
-        weight = weights.get(
-            factor,
-            0
-        )
-
+        weight = weights.get(factor,0)
         score += value * weight
-
-    score = round(
-        score,
-        2
-    )
+    score = round(score,2)
 
     # --------------------------------------------------------
     # Grade
     # --------------------------------------------------------
 
-    grade = calculate_grade(
-        score
-    )
+    grade = calculate_grade(score)
 
     return {
-
         "score": score,
-
         "grade": grade,
-
         "factors": factors
     }
 
@@ -353,55 +266,32 @@ def check_node_trust(
     state: State
 ):
 
-    min_trust = state.get(
-        "min_trust",
-        MIN_TRUST
-    )
-
-    trust = calculate_trust_score(
-        node_name
-    )
-
+    min_trust = state.get("min_trust",MIN_TRUST)
+    trust = calculate_trust_score(node_name)
     score = trust["score"]
-
     grade = trust["grade"]
-
     factors = trust["factors"]
 
     # --------------------------------------------------------
     # Approval
     # --------------------------------------------------------
 
-    approved = (
-        score >= min_trust
-    )
+    approved = (score >= min_trust)
 
-    if approved:
-
-        status = "APPROVED"
-
-    else:
-
-        status = "REJECTED"
+    if approved:status = "APPROVED"
+    else:status = "REJECTED"
 
     # --------------------------------------------------------
     # Trust record
     # --------------------------------------------------------
 
     trust_record = {
-
         "node": node_name,
-
         "score": score,
-
         "grade": grade,
-
         "approved": approved,
-
         "status": status,
-
         "minimum_required": min_trust,
-
         "factors": factors
     }
 
@@ -409,16 +299,9 @@ def check_node_trust(
     # Preserve previous history
     # --------------------------------------------------------
 
-    history = list(
-        state.get(
-            "trust_history",
-            []
-        )
-    )
+    history = list(state.get("trust_history",[]))
 
-    history.append(
-        trust_record
-    )
+    history.append(trust_record)
 
     # --------------------------------------------------------
     # Debug
@@ -472,19 +355,12 @@ def check_node_trust(
     # print()
 
     return {
-
         "current_node": node_name,
-
         "trust_score": score,
-
         "trust_grade": grade,
-
         "trust_approved": approved,
-
         "trust_status": status,
-
         "trust_factors": factors,
-
         "trust_history": history
     }
 
@@ -493,37 +369,25 @@ def check_node_trust(
 # PLANNER TRUST NODE
 # ============================================================
 
-def planner_trust_check(
-    state: State
-):
+def planner_trust_check(state: State):
 
-    return check_node_trust(
-        "planner",
-        state
-    )
+    return check_node_trust("planner",state)
 
 
 # ============================================================
 # PLANNER NODE
 # ============================================================
 
-def planner(
-    state: State
-):
+def planner(state: State):
 
     # --------------------------------------------------------
     # Safety check
     # --------------------------------------------------------
 
-    if not state.get(
-        "trust_approved",
-        False
-    ):
+    if not state.get("trust_approved",False):
 
         return {
-
             "current_node": "planner",
-
             "response": (
                 "Planner execution blocked because "
                 "the planner failed the trust check."
@@ -534,23 +398,13 @@ def planner(
     # Model
     # --------------------------------------------------------
 
-    model = state.get(
-        "model",
-        DEFAULT_MODEL
-    )
+    model = state.get("model",DEFAULT_MODEL)
 
     # --------------------------------------------------------
     # LLM
     # --------------------------------------------------------
 
-    llm = ChatGroq(
-
-        model=model,
-
-        temperature=0.1,
-
-        api_key=GROQ_API_KEY
-    )
+    llm = ChatGroq(model=model,temperature=0.1,api_key=GROQ_API_KEY)
 
     # --------------------------------------------------------
     # Generate plan
@@ -575,9 +429,7 @@ Requirements:
     )
 
     return {
-
         "current_node": "planner",
-
         "response": response.content
     }
 
@@ -586,17 +438,10 @@ Requirements:
 # PLANNER ROUTER
 # ============================================================
 
-def planner_router(
-    state: State
-):
+def planner_router(state: State):
 
-    if state.get(
-        "trust_approved",
-        False
-    ):
-
+    if state.get("trust_approved",False):
         return "approved"
-
     return "rejected"
 
 
@@ -604,28 +449,14 @@ def planner_router(
 # PLANNER REJECTION NODE
 # ============================================================
 
-def planner_rejected(
-    state: State
-):
+def planner_rejected(state: State):
+    score = state.get("trust_score")
+    grade = state.get("trust_grade")
 
-    score = state.get(
-        "trust_score"
-    )
-
-    grade = state.get(
-        "trust_grade"
-    )
-
-    minimum = state.get(
-        "min_trust",
-        MIN_TRUST
-    )
+    minimum = state.get("min_trust",MIN_TRUST)
 
     return {
-
-        "current_node":
-            "planner_rejected",
-
+        "current_node":"planner_rejected",
         "response": (
             f"Planner execution blocked.\n\n"
             f"Trust Score: {score}\n"
@@ -640,64 +471,42 @@ def planner_rejected(
 # ============================================================
 
 def create_graph():
-
-    graph = StateGraph(
-        State
-    )
+    graph = StateGraph(State)
 
     # --------------------------------------------------------
     # Trust node
     # --------------------------------------------------------
 
-    graph.add_node(
-        "planner_trust_check",
-        planner_trust_check
-    )
+    graph.add_node("planner_trust_check",planner_trust_check)
 
     # --------------------------------------------------------
     # Planner
     # --------------------------------------------------------
 
-    graph.add_node(
-        "planner",
-        planner
-    )
+    graph.add_node("planner",planner)
 
     # --------------------------------------------------------
     # Rejected
     # --------------------------------------------------------
 
-    graph.add_node(
-        "planner_rejected",
-        planner_rejected
-    )
+    graph.add_node("planner_rejected",planner_rejected)
 
     # --------------------------------------------------------
     # START
     # --------------------------------------------------------
 
-    graph.add_edge(
-        START,
-        "planner_trust_check"
-    )
+    graph.add_edge(START,"planner_trust_check")
 
     # --------------------------------------------------------
     # Trust routing
     # --------------------------------------------------------
 
     graph.add_conditional_edges(
-
         "planner_trust_check",
-
         planner_router,
-
         {
-
-            "approved":
-                "planner",
-
-            "rejected":
-                "planner_rejected"
+            "approved":"planner",
+            "rejected":"planner_rejected"
         }
     )
 
@@ -705,16 +514,8 @@ def create_graph():
     # END
     # --------------------------------------------------------
 
-    graph.add_edge(
-        "planner",
-        END
-    )
-
-    graph.add_edge(
-        "planner_rejected",
-        END
-    )
-
+    graph.add_edge("planner",END)
+    graph.add_edge("planner_rejected",END)
     return graph
 
 
@@ -723,9 +524,7 @@ def create_graph():
 # ============================================================
 
 def get_graph():
-
     graph = create_graph()
-
     return graph.compile()
 
 
@@ -733,17 +532,10 @@ def get_graph():
 # FASTAPI APPLICATION
 # ============================================================
 
-filename = os.path.basename(
-    __file__
-).split(".")[0]
+filename = os.path.basename(__file__).split(".")[0]
 
 
-app = FastAPI(
-
-    title=filename,
-
-    version="1.0.0"
-)
+app = FastAPI(title=filename,version="1.0.0")
 
 
 # ============================================================
@@ -751,15 +543,10 @@ app = FastAPI(
 # ============================================================
 
 app.add_middleware(
-
     CORSMiddleware,
-
     allow_origins=["*"],
-
     allow_credentials=True,
-
     allow_methods=["*"],
-
     allow_headers=["*"]
 )
 
@@ -768,34 +555,17 @@ app.add_middleware(
 # ROOT -> SWAGGER
 # ============================================================
 
-@app.get(
-    "/",
-    include_in_schema=False
-)
+@app.get("/",include_in_schema=False)
 async def redirect_to_docs():
-
-    return RedirectResponse(
-        url="/docs"
-    )
+    return RedirectResponse(url="/docs")
 
 
 # ============================================================
 # PLANNER API
 # ============================================================
 
-@app.get(
-    "/planner/{goal}",
-    operation_id="get_planners"
-)
-def run(
-
-    goal: str,
-
-    model: str = DEFAULT_MODEL,
-
-    min_trust: float = MIN_TRUST
-
-):
+@app.get("/planner/{goal}",operation_id="get_planners")
+def run(goal: str,model: str = DEFAULT_MODEL,min_trust: float = MIN_TRUST):
 
     # --------------------------------------------------------
     # Compile graph
@@ -808,15 +578,10 @@ def run(
     # --------------------------------------------------------
 
     initial_state: State = {
-
         "goal": goal,
-
         "model": model,
-
         "current_node": "planner",
-
         "min_trust": min_trust,
-
         "trust_history": []
     }
 
@@ -824,67 +589,26 @@ def run(
     # Execute
     # --------------------------------------------------------
 
-    result = compiled_graph.invoke(
-        initial_state
-    )
+    result = compiled_graph.invoke(initial_state)
 
     # --------------------------------------------------------
     # Return
     # --------------------------------------------------------
 
     return {
-
         "goal": goal,
-
         "model": model,
-
         "minimum_trust": min_trust,
-
-        "current_node":
-            result.get(
-                "current_node"
-            ),
-
+        "current_node":result.get("current_node"),
         "trust": {
-
-            "score":
-                result.get(
-                    "trust_score"
-                ),
-
-            "grade":
-                result.get(
-                    "trust_grade"
-                ),
-
-            "approved":
-                result.get(
-                    "trust_approved",
-                    False
-                ),
-
-            "status":
-                result.get(
-                    "trust_status"
-                ),
-
-            "factors":
-                result.get(
-                    "trust_factors",
-                    {}
-                )
+            "score":result.get("trust_score"),
+            "grade":result.get("trust_grade"),
+            "approved":result.get("trust_approved",False),
+            "status":result.get("trust_status"),
+            "factors":result.get("trust_factors",{})
         },
-
-        "trust_history":
-            result.get(
-                "trust_history",
-                []
-            ),
-
-        "response":
-            result.get(
-                "response"
-            )
+        "trust_history":result.get("trust_history",[]),
+        "response":result.get("response")
     }
 
 
@@ -892,53 +616,23 @@ def run(
 # TRUST SCORE API
 # ============================================================
 
-@app.get(
-    "/trust/{node_name}"
-)
-def get_trust_score(
-
-    node_name: str,
-
-    min_trust: float = MIN_TRUST
-
-):
-
-    trust = calculate_trust_score(
-        node_name
-    )
-
+@app.get("/trust/{node_name}")
+def get_trust_score(node_name: str,min_trust: float = MIN_TRUST):
+    trust = calculate_trust_score(node_name)
     score = trust["score"]
-
-    approved = (
-        score >= min_trust
-    )
-
+    approved = (score >= min_trust)
     return {
-
-        "node":
-            node_name,
-
+        "node":node_name,
         "trust": {
-
-            "score":
-                score,
-
-            "grade":
-                trust["grade"],
-
-            "minimum_required":
-                min_trust,
-
-            "approved":
-                approved,
-
+            "score":score,
+            "grade":trust["grade"],
+            "minimum_required":min_trust,
+            "approved":approved,
             "status":
                 "APPROVED"
                 if approved
                 else "REJECTED",
-
-            "factors":
-                trust["factors"]
+            "factors":trust["factors"]
         }
     }
 
@@ -947,59 +641,28 @@ def get_trust_score(
 # ALL NODE TRUST SCORES API
 # ============================================================
 
-@app.get(
-    "/trust"
-)
-def get_all_trust_scores(
-
-    min_trust: float = MIN_TRUST
-
-):
-
+@app.get("/trust")
+def get_all_trust_scores(min_trust: float = MIN_TRUST):
     results = []
-
     for node_name in NODE_TRUST_CONFIG:
-
-        trust = calculate_trust_score(
-            node_name
-        )
-
+        trust = calculate_trust_score(node_name)
         score = trust["score"]
-
-        approved = (
-            score >= min_trust
-        )
-
+        approved = (score >= min_trust)
         results.append({
-
-            "node":
-                node_name,
-
-            "score":
-                score,
-
-            "grade":
-                trust["grade"],
-
-            "approved":
-                approved,
-
+            "node":node_name,
+            "score":score,
+            "grade":trust["grade"],
+            "approved":approved,
             "status":
                 "APPROVED"
                 if approved
                 else "REJECTED",
-
-            "factors":
-                trust["factors"]
+            "factors":trust["factors"]
         })
 
     return {
-
-        "minimum_required":
-            min_trust,
-
-        "nodes":
-            results
+        "minimum_required":min_trust,
+        "nodes":results
     }
 
 
@@ -1013,17 +676,7 @@ if __name__ == "__main__":
     # FastAPI MCP
     # --------------------------------------------------------
 
-    mcp = FastApiMCP(
-
-        app,
-
-        include_operations=[
-            "get_planners",
-            "get_trust_score",
-            "get_all_trust_scores"
-        ]
-    )
-
+    mcp = FastApiMCP(app,include_operations=["get_planners","get_trust_score","get_all_trust_scores"])
     mcp.mount_http()
 
     # --------------------------------------------------------
@@ -1032,11 +685,4 @@ if __name__ == "__main__":
 
     import uvicorn
 
-    uvicorn.run(
-
-        app,
-
-        host="0.0.0.0",
-
-        port=8000
-    )
+    uvicorn.run(app,host="0.0.0.0",port=8000)
