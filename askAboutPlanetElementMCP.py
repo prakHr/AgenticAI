@@ -66,10 +66,10 @@ from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 
 
-def get_app(filename):
+def get_app(filename,version):
     app = FastAPI(
         title=f"{filename}",
-        version="1.0.0"
+        version=f"{version}"
     )
 
     app.add_middleware(
@@ -81,8 +81,10 @@ def get_app(filename):
     )
     return app
 
+
 filename = os.path.basename(__file__).split(".")[0]
-app = get_app(filename)
+version = "1.0.0"
+app = get_app(filename,version)
 
 
 @app.get("/", include_in_schema=False)
