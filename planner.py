@@ -68,57 +68,6 @@ def run_planner_execution(goal:str,model:str)->str:
     final_response = get_response(model,messages,None)
     return {"request":goal,"response":get_choice(final_response)}
     
-
-# uvicorn writer:app --reload
-
-import os
-from pathlib import Path
-from dotenv import load_dotenv
-from groq import Groq
-import json
-from fastapi import FastAPI
-import mpire
-import os
-os.environ["OMP_NUM_THREADS"] = "1"
-import time
-import multiprocessing 
-from mpire import WorkerPool
-from pprint import pprint
-from typing import List
-from fastapi import FastAPI, Query
-from typing import List
-
-import asyncio
-from fastapi import FastAPI, Query
-from typing import List
-import instructor
-
-load_dotenv()
-my_api_key = os.getenv("GROQ_API_KEY")
-
-if not my_api_key:
-    raise ValueError("API key not found!")
-subclient = Groq(api_key=my_api_key)
-client = instructor.from_groq(subclient, mode=instructor.Mode.JSON)
-
-def get_choice(response):
-    return response.choices[0].message.content
-
-def get_response(model,messages,response_format):
-    return client.chat.completions.create(model=model, messages=messages, response_format=response_format,compound_custom={"tools":{"enabled_tools":["web_search","code_interpreter","visit_website"]}})
-    
-def run_writer_execution(write:str,model:str)->str:
-    role1 = "system"
-    role2 = "user"
-    ROLE = "role"
-    CONTENT = "content"
-    messages = [
-        {ROLE:role1,CONTENT:"Give the web search of the following topic."},
-        {ROLE:role2,CONTENT:write},
-    ]
-
-    final_response = get_response(model,messages,None)
-    return {"request":write,"response":get_choice(final_response)}
     
 
 from fastapi import FastAPI
