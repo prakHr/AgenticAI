@@ -65,20 +65,24 @@ def run_askElementDetails_execution(element_name:str,planet_name:str,model:str)-
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 
+
+def get_app(filename):
+    app = FastAPI(
+        title=f"{filename}",
+        version="1.0.0"
+    )
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    return app
+
 filename = os.path.basename(__file__).split(".")[0]
-app = FastAPI(
-    title=f"{filename}",
-    version="1.0.0"
-)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
+app = get_app(filename)
 
 
 @app.get("/", include_in_schema=False)
