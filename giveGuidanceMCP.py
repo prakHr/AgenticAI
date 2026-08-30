@@ -83,10 +83,8 @@ def run_app(app,host,port):
 filename = os.path.basename(__file__).split(".")[0]
 
 app = get_app(filename)
-mcp = FastApiMCP(app)
-mcp.mount_http()
 
-@app.get("/", include_in_schema=False)
+@app.get("/", include_in_schema=False,operation_id="give_guidance")
 async def redirect_to_docs():
     return RedirectResponse(url="/docs")
 
@@ -97,5 +95,7 @@ def read_item(model:str,system_prompt:str,human_prompt:str):
 
 
 if __name__ == "__main__":
+    mcp = FastApiMCP(app,include_operations = ["give_guidance"])
+    mcp.mount_http()
     run_app(app,"localhost",8000)
     

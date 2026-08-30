@@ -81,14 +81,12 @@ def get_app(filename):
 filename = os.path.basename(__file__).split(".")[0]
 
 app = get_app(filename)
-mcp = FastApiMCP(app)
-mcp.mount_http()
 
 @app.get("/", include_in_schema=False)
 async def redirect_to_docs():
     return RedirectResponse(url="/docs")
 
-@app.get("/giveGuidances/")
+@app.get("/giveGuidances/",operation_id="give_guidances")
 def read_item(model:str,system_prompt:str,progress_bar:bool,human_prompts:List[str] = Query(...)):
     num_cores = max(min(multiprocessing.cpu_count() // 2, 2),1)
     results = []
@@ -106,4 +104,6 @@ def read_item(model:str,system_prompt:str,progress_bar:bool,human_prompts:List[s
 
 if __name__ == "__main__":
     import uvicorn
+    mcp = FastApiMCP(app,include_operations = ["give_guidances"])
+    mcp.mount_http()
     uvicorn.run(app, host="localhost", port=8000)
