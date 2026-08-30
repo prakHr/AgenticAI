@@ -68,34 +68,22 @@ from rank_bm25 import BM25Okapi
 
 load_dotenv()
 
-QDRANT_URL = os.getenv(
-    "QDRANT_URL"
-)
+QDRANT_URL = os.getenv("QDRANT_URL")
 
-QDRANT_API_KEY = os.getenv(
-    "QDRANT_API_KEY"
-)
+QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
 
-GROQ_API_KEY = os.getenv(
-    "GROQ_API_KEY"
-)
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 
 # ============================================================
 # CONFIGURATION
 # ============================================================
 
-BART_MODEL = (
-    "facebook/bart-large-cnn"
-)
+BART_MODEL = ("facebook/bart-large-cnn")
 
-EMBEDDING_MODEL = (
-    "all-MiniLM-L6-v2"
-)
+EMBEDDING_MODEL = ("all-MiniLM-L6-v2")
 
-RERANKER_MODEL = (
-    "cross-encoder/ms-marco-MiniLM-L-6-v2"
-)
+RERANKER_MODEL = ("cross-encoder/ms-marco-MiniLM-L-6-v2")
 
 EMBEDDING_SIZE = 384
 
@@ -112,13 +100,7 @@ CHUNK_OVERLAP = 150
 # MULTIPROCESSING
 # ============================================================
 
-NUM_WORKERS = max(
-    min(
-        multiprocessing.cpu_count() // 2,
-        2
-    ),
-    1
-)
+NUM_WORKERS = max(min(multiprocessing.cpu_count() // 2,2),1)
 
 
 # ============================================================
@@ -181,9 +163,7 @@ def get_loader(file_path):
     This allows recursive splitting across page boundaries.
     """
 
-    ext = os.path.splitext(
-        file_path
-    )[1].lower()
+    ext = os.path.splitext(file_path)[1].lower()
 
     try:
 
@@ -193,23 +173,16 @@ def get_loader(file_path):
 
         if ext == ".pdf":
 
-            pages = PyPDFLoader(
-                file_path
-            ).load()
+            pages = PyPDFLoader(file_path).load()
 
             if not pages:
                 return None
 
             complete_text = []
 
-            for page_number, page in enumerate(
-                pages,
-                start=1
-            ):
+            for page_number, page in enumerate(pages,start=1):
 
-                page_text = (
-                    page.page_content.strip()
-                )
+                page_text = (page.page_content.strip())
 
                 if not page_text:
                     continue
@@ -219,13 +192,9 @@ def get_loader(file_path):
                     f"{page_text}\n"
                 )
 
-                complete_text.append(
-                    page_block
-                )
+                complete_text.append(page_block)
 
-            full_text = "\n".join(
-                complete_text
-            )
+            full_text = "\n".join(complete_text)
 
             if not full_text.strip():
                 return None
@@ -234,16 +203,10 @@ def get_loader(file_path):
 
             if pages[0].metadata:
 
-                metadata.update(
-                    pages[0].metadata
-                )
+                metadata.update(pages[0].metadata)
 
             metadata["source"] = file_path
-
-            metadata["total_pages"] = len(
-                pages
-            )
-
+            metadata["total_pages"] = len(pages)
             metadata["file_type"] = "pdf"
 
             return [
@@ -259,33 +222,20 @@ def get_loader(file_path):
         # ====================================================
 
         elif ext == ".txt":
-
-            documents = TextLoader(
-                file_path,
-                encoding="utf-8"
-            ).load()
-
+            documents = TextLoader(file_path,encoding="utf-8").load()
             results = []
-
             for document in documents:
-
                 results.append(
                     {
-                        "page_content":
-                            document.page_content,
+                        "page_content": document.page_content,
 
                         "metadata": {
                             **document.metadata,
-
-                            "source":
-                                file_path,
-
-                            "file_type":
-                                "txt"
+                            "source":file_path,
+                            "file_type":"txt"
                         }
                     }
                 )
-
             return results
 
 
@@ -293,41 +243,23 @@ def get_loader(file_path):
         # DOC / DOCX
         # ====================================================
 
-        elif ext in [
-            ".docx",
-            ".doc"
-        ]:
+        elif ext in [".docx",".doc"]:
 
-            documents = (
-                UnstructuredWordDocumentLoader(
-                    file_path
-                ).load()
-            )
-
+            documents = (UnstructuredWordDocumentLoader(file_path).load())
             results = []
-
             for document in documents:
-
                 results.append(
                     {
-                        "page_content":
-                            document.page_content,
+                        "page_content":document.page_content,
 
                         "metadata": {
-
                             **document.metadata,
-
-                            "source":
-                                file_path,
-
-                            "file_type":
-                                ext[1:]
+                            "source":file_path,
+                            "file_type":ext[1:]
                         }
                     }
                 )
-
             return results
-
 
         # ====================================================
         # UNSUPPORTED
@@ -337,13 +269,11 @@ def get_loader(file_path):
 
 
     except Exception as e:
-
         print(
             f"\nError loading file:"
             f"\n{file_path}"
             f"\n{e}"
         )
-
         return None
 
 
@@ -359,33 +289,14 @@ def get_files(folder_path):
         ".docx",
         ".doc"
     }
-
     files = []
-
-    for file_name in os.listdir(
-        folder_path
-    ):
-
-        file_path = os.path.join(
-            folder_path,
-            file_name
-        )
-
-        if not os.path.isfile(
-            file_path
-        ):
+    for file_name in os.listdir(folder_path):
+        file_path = os.path.join(folder_path,file_name)
+        if not os.path.isfile(file_path):
             continue
-
-        ext = os.path.splitext(
-            file_name
-        )[1].lower()
-
+        ext = os.path.splitext(file_name)[1].lower()
         if ext in supported_extensions:
-
-            files.append(
-                file_path
-            )
-
+            files.append(file_path)
     return files
 
 
@@ -393,33 +304,11 @@ def get_files(folder_path):
 # LOAD BART MODEL
 # ============================================================
 
-def load_big_model(
-    worker_state
-):
-
-    tokenizer = (
-        AutoTokenizer.from_pretrained(
-            BART_MODEL
-        )
-    )
-
-    summarizer = pipeline(
-        "summarization",
-
-        model=BART_MODEL,
-
-        tokenizer=tokenizer,
-
-        device=-1
-    )
-
-    worker_state[
-        "tokenizer"
-    ] = tokenizer
-
-    worker_state[
-        "summarizer"
-    ] = summarizer
+def load_big_model(worker_state):
+    tokenizer = (AutoTokenizer.from_pretrained(BART_MODEL))
+    summarizer = pipeline("summarization",model=BART_MODEL,tokenizer=tokenizer,device=-1)
+    worker_state["tokenizer"] = tokenizer
+    worker_state["summarizer"] = summarizer
 
 
 # ============================================================
@@ -427,14 +316,10 @@ def load_big_model(
 # ============================================================
 
 def create_text_splitter():
-
     splitter = (
         RecursiveCharacterTextSplitter(
-
             chunk_size=CHUNK_SIZE,
-
             chunk_overlap=CHUNK_OVERLAP,
-
             separators=[
                 "\n\n",
                 "\n",
@@ -446,13 +331,10 @@ def create_text_splitter():
                 " ",
                 ""
             ],
-
             length_function=len,
-
             is_separator_regex=False
         )
     )
-
     return splitter
 
 
@@ -460,29 +342,13 @@ def create_text_splitter():
 # FIND PAGE NUMBERS
 # ============================================================
 
-def get_page_numbers(
-    text
-):
-
-    matches = re.findall(
-        r"\[PAGE\s+(\d+)\]",
-        text
-    )
-
+def get_page_numbers(text):
+    matches = re.findall(r"\[PAGE\s+(\d+)\]",text)
     page_numbers = []
-
     for match in matches:
-
-        page_number = int(
-            match
-        )
-
+        page_number = int(match)
         if page_number not in page_numbers:
-
-            page_numbers.append(
-                page_number
-            )
-
+            page_numbers.append(page_number)
     return page_numbers
 
 
@@ -490,16 +356,8 @@ def get_page_numbers(
 # CLEAN PAGE MARKERS
 # ============================================================
 
-def clean_page_markers(
-    text
-):
-
-    text = re.sub(
-        r"\[PAGE\s+\d+\]",
-        "",
-        text
-    )
-
+def clean_page_markers(text):
+    text = re.sub(r"\[PAGE\s+\d+\]","",text)
     return text.strip()
 
 
@@ -507,121 +365,59 @@ def clean_page_markers(
 # CREATE STABLE CHUNK ID
 # ============================================================
 
-def create_chunk_id(
-    text,
-    file_path,
-    chunk_index
-):
-
+def create_chunk_id(text,file_path,chunk_index):
     """
     Creates a stable ID for every chunk.
     """
-
     raw = (
         f"{file_path}|"
         f"{chunk_index}|"
         f"{text}"
     )
 
-    return hashlib.sha256(
-        raw.encode("utf-8")
-    ).hexdigest()
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
 
 # ============================================================
 # SPLIT DOCUMENTS
 # ============================================================
 
-def split_documents(
-    documents
-):
-
+def split_documents(documents):
     """
     Cross-page recursive chunking.
     """
-
-    splitter = (
-        create_text_splitter()
-    )
-
+    splitter = (create_text_splitter())
     split_docs = []
-
     for document in documents:
-
-        full_text = (
-            document[
-                "page_content"
-            ]
-        )
-
-        metadata = (
-            document[
-                "metadata"
-            ]
-        )
-
+        full_text = (document["page_content"])
+        metadata = (document["metadata"])
         if not full_text.strip():
             continue
 
-        chunks = (
-            splitter.split_text(
-                full_text
-            )
-        )
-
-        for chunk_index, chunk in enumerate(
-            chunks
-        ):
-
+        chunks = (splitter.split_text(full_text))
+        for chunk_index, chunk in enumerate(chunks):
             if not chunk.strip():
                 continue
 
-            page_numbers = (
-                get_page_numbers(
-                    chunk
-                )
-            )
-
-            clean_text = (
-                clean_page_markers(
-                    chunk
-                )
-            )
+            page_numbers = (get_page_numbers(chunk))
+            clean_text = (clean_page_markers(chunk))
 
             if not clean_text:
                 continue
 
-            chunk_id = (
-                create_chunk_id(
-                    clean_text,
-                    metadata.get(
-                        "source",
-                        ""
-                    ),
-                    chunk_index
-                )
-            )
+            chunk_id = (create_chunk_id(clean_text,metadata.get("source",""),chunk_index))
 
             chunk_metadata = {
-
                 **metadata,
-
-                "chunk_id":
-                    chunk_id,
-
-                "chunk_index":
-                    chunk_index,
-
-                "page_numbers":
-                    page_numbers,
-
+                "chunk_id":chunk_id,
+                "chunk_index":chunk_index,
+                "page_numbers":page_numbers,
                 "start_page":
                     (
                         min(page_numbers)
                         if page_numbers
                         else None
                     ),
-
                 "end_page":
                     (
                         max(page_numbers)
@@ -629,17 +425,12 @@ def split_documents(
                         else None
                     )
             }
-
             split_docs.append(
                 {
-                    "page_content":
-                        clean_text,
-
-                    "metadata":
-                        chunk_metadata
+                    "page_content":clean_text,
+                    "metadata":chunk_metadata
                 }
             )
-
     return split_docs
 
 
@@ -647,10 +438,7 @@ def split_documents(
 # EXACT CHUNK DEDUPLICATION
 # ============================================================
 
-def deduplicate_chunks(
-    documents
-):
-
+def deduplicate_chunks(documents):
     """
     Removes exact duplicate chunks.
 
@@ -659,41 +447,22 @@ def deduplicate_chunks(
     """
 
     seen = set()
-
     unique_documents = []
-
     duplicates = 0
 
     for document in documents:
-
-        text = (
-            document[
-                "page_content"
-            ].strip()
-        )
-
+        text = (document["page_content"].strip())
         if not text:
             continue
 
-        normalized_text = re.sub(
-            r"\s+",
-            " ",
-            text
-        ).strip().lower()
+        normalized_text = re.sub(r"\s+"," ",text).strip().lower()
 
         if normalized_text in seen:
-
             duplicates += 1
-
             continue
 
-        seen.add(
-            normalized_text
-        )
-
-        unique_documents.append(
-            document
-        )
+        seen.add(normalized_text)
+        unique_documents.append(document)
 
     print(
         f"\nExact duplicate chunks removed: "
@@ -712,132 +481,56 @@ def deduplicate_chunks(
 # SUMMARIZE CHUNK
 # ============================================================
 
-def summarize(
-    worker_state,
-    page_content,
-    metadata
-):
-
-    summarizer = (
-        worker_state[
-            "summarizer"
-        ]
-    )
-
-    text = (
-        page_content.strip()
-    )
+def summarize(worker_state,page_content,metadata):
+    summarizer = (worker_state["summarizer"])
+    text = (page_content.strip())
 
     if not text:
-
         return {
             "text": "",
-
             "original_text": "",
-
             "metadata": metadata
         }
-
     try:
-
-        input_length = len(
-            text.split()
-        )
+        input_length = len(text.split())
 
         # ====================================================
         # SMALL CHUNK
         # ====================================================
 
         if input_length < 30:
-
             return {
-                "text": text,
-
-                "original_text":
-                    text,
-
-                "metadata":
-                    metadata
+                "text":text,
+                "original_text":text,
+                "metadata":metadata
             }
 
         # ====================================================
         # SUMMARY LENGTH
         # ====================================================
 
-        max_len = min(
-            100,
-            max(
-                30,
-                int(
-                    input_length * 0.6
-                )
-            )
-        )
-
-        min_len = min(
-            30,
-            max(
-                10,
-                int(
-                    max_len * 0.4
-                )
-            )
-        )
+        max_len = min(100,max(30,int(input_length * 0.6)))
+        min_len = min(30,max(10,int(max_len * 0.4)))
 
         if min_len >= max_len:
-
-            min_len = max(
-                5,
-                max_len // 2
-            )
+            min_len = max(5,max_len // 2)
 
         # ====================================================
         # BART
         # ====================================================
 
-        result = summarizer(
-
-            text,
-
-            max_length=max_len,
-
-            min_length=min_len,
-
-            do_sample=False,
-
-            truncation=True
-        )
-
-        summary_text = (
-            result[0][
-                "summary_text"
-            ]
-        )
-
+        result = summarizer(text,max_length=max_len,min_length=min_len,do_sample=False,truncation=True)
+        summary_text = (result[0]["summary_text"])
         return {
-
-            "text":
-                summary_text,
-
-            "original_text":
-                text,
-
-            "metadata":
-                metadata
+            "text":summary_text,
+            "original_text":text,
+            "metadata":metadata
         }
-
     except Exception:
-
         return {
-
-            "text":
-                text,
-
-            "original_text":
-                text,
-
-            "metadata":
-                metadata
+            "text":text,
+            "original_text":text,
+            "metadata":metadata
         }
 
 
@@ -845,95 +538,39 @@ def summarize(
 # MODIFY DOCUMENTS
 # ============================================================
 
-def modify_docs(
-    documents
-):
-
+def modify_docs(documents):
     results = []
-
     metadata_set = set()
-
     for document in documents:
-
-        metadata = (
-            document[
-                "metadata"
-            ]
-        )
-
+        metadata = (document["metadata"])
         result = {
-
-            "text":
-                document[
-                    "text"
-                ],
-
-            "original_text":
-                document[
-                    "original_text"
-                ]
+            "text":document["text"],
+            "original_text":document["original_text"]
         }
-
-        for key, value in (
-            metadata.items()
-        ):
-
+        for key, value in (metadata.items()):
             if key == "source":
-
                 file_path = value
-
-                ext = (
-                    os.path.splitext(
-                        file_path
-                    )[1]
-                    .lower()[1:]
-                )
-
-                result[
-                    "source"
-                ] = ext
-
-                result[
-                    "file_path"
-                ] = file_path
-
-                metadata_set.add(
-                    (
-                        "source",
-                        ext
-                    )
-                )
-
+                ext = (os.path.splitext(file_path)[1].lower()[1:])
+                result["source"] = ext
+                result["file_path"] = file_path
+                metadata_set.add(("source",ext))
             else:
-
                 result[key] = value
-
-        results.append(
-            result
-        )
-
-    return (
-        results,
-        metadata_set
-    )
+        results.append(result)
+    return (results,metadata_set)
 
 
 # ============================================================
 # LOAD + SPLIT + DEDUPLICATE + SUMMARIZE
 # ============================================================
 
-def get_list_of_dicts(
-    folder_path,
-    progress_bar
-):
+def get_list_of_dicts(folder_path,progress_bar):
 
     # ========================================================
     # GET FILES
     # ========================================================
 
-    files = get_files(
-        folder_path
-    )
+    files = get_files(folder_path)
 
     print(
         f"\nFound {len(files)} files."
@@ -943,34 +580,18 @@ def get_list_of_dicts(
     # LOAD FILES
     # ========================================================
 
-    with WorkerPool(
-        n_jobs=NUM_WORKERS,
-        daemon=False
-    ) as pool:
-
-        loaded_results = (
-            pool.map(
-                get_loader,
-                files,
-                progress_bar=
-                    progress_bar
-            )
-        )
+    with WorkerPool(n_jobs=NUM_WORKERS,daemon=False) as pool:
+        loaded_results = (pool.map(get_loader,files,progress_bar=progress_bar))
 
     # ========================================================
     # FLATTEN
     # ========================================================
 
     documents = []
-
     for result in loaded_results:
-
         if result is None:
             continue
-
-        documents.extend(
-            result
-        )
+        documents.extend(result)
 
     print(
         f"Loaded {len(documents)} "
@@ -981,11 +602,7 @@ def get_list_of_dicts(
     # CROSS-PAGE RECURSIVE SPLITTING
     # ========================================================
 
-    split_docs = (
-        split_documents(
-            documents
-        )
-    )
+    split_docs = (split_documents(documents))
 
     print(
         f"Created {len(split_docs)} "
@@ -996,36 +613,15 @@ def get_list_of_dicts(
     # EXACT DEDUPLICATION
     # ========================================================
 
-    split_docs = (
-        deduplicate_chunks(
-            split_docs
-        )
-    )
+    split_docs = (deduplicate_chunks(split_docs))
 
     # ========================================================
     # SUMMARIZATION
     # ========================================================
 
-    with WorkerPool(
-        n_jobs=NUM_WORKERS,
-        daemon=False,
-        use_worker_state=True
-    ) as pool:
+    with WorkerPool(n_jobs=NUM_WORKERS,daemon=False,use_worker_state=True) as pool:
 
-        summarized_docs = (
-            pool.map(
-
-                summarize,
-
-                split_docs,
-
-                progress_bar=
-                    progress_bar,
-
-                worker_init=
-                    load_big_model
-            )
-        )
+        summarized_docs = (pool.map(summarize,split_docs,progress_bar=progress_bar,worker_init=load_big_model))
 
     print(
         f"Summarized "
@@ -1036,77 +632,42 @@ def get_list_of_dicts(
     # MODIFY METADATA
     # ========================================================
 
-    results, metadata_set = (
-        modify_docs(
-            summarized_docs
-        )
-    )
-
-    return (
-        results,
-        metadata_set
-    )
+    results, metadata_set = (modify_docs(summarized_docs))
+    return (results,metadata_set)
 
 
 # ============================================================
 # TOKENIZE FOR BM25
 # ============================================================
 
-def tokenize_text(
-    text
-):
-
+def tokenize_text(text):
     """
     Tokenizer for BM25.
 
     Lowercase + word tokenization.
     """
-
-    return re.findall(
-        r"\b\w+\b",
-        text.lower()
-    )
+    return re.findall(r"\b\w+\b",text.lower())
 
 
 # ============================================================
 # BUILD BM25
 # ============================================================
 
-def build_bm25_index(
-    documents
-):
-
+def build_bm25_index(documents):
     print(
         "\nBuilding BM25 index..."
     )
 
     tokenized_documents = []
-
     for document in documents:
-
-        text = document[
-            "original_text"
-        ]
-
-        tokens = (
-            tokenize_text(
-                text
-            )
-        )
-
-        tokenized_documents.append(
-            tokens
-        )
-
-    bm25 = BM25Okapi(
-        tokenized_documents
-    )
-
+        text = document["original_text"]
+        tokens = (tokenize_text(text))
+        tokenized_documents.append(tokens)
+    bm25 = BM25Okapi(tokenized_documents)
     print(
         f"BM25 index created for "
         f"{len(documents)} chunks."
     )
-
     return bm25
 
 
@@ -1114,56 +675,21 @@ def build_bm25_index(
 # BM25 SEARCH
 # ============================================================
 
-def bm25_search(
-    bm25,
-    query,
-    top_k
-):
-
-    query_tokens = (
-        tokenize_text(
-            query
-        )
-    )
-
+def bm25_search(bm25,query,top_k):
+    query_tokens = (tokenize_text(query))
     if not query_tokens:
-
         return []
-
-    scores = (
-        bm25.get_scores(
-            query_tokens
-        )
-    )
-
-    ranked_indices = (
-        np.argsort(
-            scores
-        )[::-1]
-    )
-
-    ranked_indices = (
-        ranked_indices[
-            :top_k
-        ]
-    )
-
+    scores = (bm25.get_scores(query_tokens))
+    ranked_indices = (np.argsort(scores)[::-1])
+    ranked_indices = (ranked_indices[:top_k])
     results = []
-
     for index in ranked_indices:
-
         results.append(
             {
-                "index":
-                    int(index),
-
-                "bm25_score":
-                    float(
-                        scores[index]
-                    )
+                "index":int(index),
+                "bm25_score":float(scores[index])
             }
         )
-
     return results
 
 
@@ -1171,14 +697,7 @@ def bm25_search(
 # RRF
 # ============================================================
 
-def reciprocal_rank_fusion(
-    vector_results,
-    bm25_results,
-    k=60,
-    vector_weight=0.5,
-    bm25_weight=0.5
-):
-
+def reciprocal_rank_fusion(vector_results,bm25_results,k=60,vector_weight=0.5,bm25_weight=0.5):
     """
     Weighted Reciprocal Rank Fusion.
 
@@ -1187,166 +706,56 @@ def reciprocal_rank_fusion(
     """
 
     scores = {}
-
     metadata = {}
 
     # ========================================================
     # VECTOR
     # ========================================================
 
-    for rank, result in enumerate(
-        vector_results,
-        start=1
-    ):
-
-        doc_index = (
-            result[
-                "index"
-            ]
-        )
-
-        rrf_score = (
-            vector_weight /
-            (k + rank)
-        )
-
-        scores[
-            doc_index
-        ] = (
-            scores.get(
-                doc_index,
-                0.0
-            )
-            +
-            rrf_score
-        )
-
-        metadata.setdefault(
-            doc_index,
-            {}
-        )
-
-        metadata[
-            doc_index
-        ][
-            "vector_rank"
-        ] = rank
-
-        metadata[
-            doc_index
-        ][
-            "vector_score"
-        ] = result[
-            "qdrant_score"
-        ]
+    for rank, result in enumerate(vector_results,start=1):
+        doc_index = (result["index"])
+        rrf_score = (vector_weight /(k + rank))
+        scores[doc_index] = (scores.get(doc_index,0.0)+rrf_score)
+        metadata.setdefault(doc_index,{})
+        metadata[doc_index]["vector_rank"] = rank
+        metadata[doc_index]["vector_score"] = result["qdrant_score"]
 
     # ========================================================
     # BM25
     # ========================================================
 
-    for rank, result in enumerate(
-        bm25_results,
-        start=1
-    ):
+    for rank, result in enumerate(bm25_results,start=1):
 
-        doc_index = (
-            result[
-                "index"
-            ]
-        )
-
-        rrf_score = (
-            bm25_weight /
-            (k + rank)
-        )
-
-        scores[
-            doc_index
-        ] = (
-            scores.get(
-                doc_index,
-                0.0
-            )
-            +
-            rrf_score
-        )
-
-        metadata.setdefault(
-            doc_index,
-            {}
-        )
-
-        metadata[
-            doc_index
-        ][
-            "bm25_rank"
-        ] = rank
-
-        metadata[
-            doc_index
-        ][
-            "bm25_score"
-        ] = result[
-            "bm25_score"
-        ]
+        doc_index = (result["index"])
+        rrf_score = (bm25_weight /(k + rank))
+        scores[doc_index] = (scores.get(doc_index,0.0)+rrf_score)
+        metadata.setdefault(doc_index,{})
+        metadata[doc_index]["bm25_rank"] = rank
+        metadata[doc_index]["bm25_score"] = result["bm25_score"]
 
     # ========================================================
     # SORT
     # ========================================================
 
-    ranked = sorted(
-        scores.items(),
-        key=lambda x: x[1],
-        reverse=True
-    )
+    ranked = sorted(scores.items(),key=lambda x: x[1],reverse=True)
 
     # ========================================================
     # CREATE RESULT
     # ========================================================
 
     results = []
-
     for doc_index, rrf_score in ranked:
-
-        result_metadata = (
-            metadata[
-                doc_index
-            ]
-        )
-
+        result_metadata = (metadata[doc_index])
         results.append(
             {
-
-                "index":
-                    doc_index,
-
-                "rrf_score":
-                    float(
-                        rrf_score
-                    ),
-
-                "vector_rank":
-                    result_metadata.get(
-                        "vector_rank"
-                    ),
-
-                "bm25_rank":
-                    result_metadata.get(
-                        "bm25_rank"
-                    ),
-
-                "vector_score":
-                    result_metadata.get(
-                        "vector_score"
-                    ),
-
-                "bm25_score":
-                    result_metadata.get(
-                        "bm25_score"
-                    )
+                "index":doc_index,
+                "rrf_score":float(rrf_score),
+                "vector_rank":result_metadata.get("vector_rank"),
+                "bm25_rank":result_metadata.get("bm25_rank"),
+                "vector_score":result_metadata.get("vector_score"),
+                "bm25_score":result_metadata.get("bm25_score")
             }
         )
-
     return results
 
 
@@ -1355,19 +764,15 @@ def reciprocal_rank_fusion(
 # ============================================================
 
 def load_cross_encoder():
-
     print(
         "\nLoading CrossEncoder..."
     )
-
     reranker = CrossEncoder(
         RERANKER_MODEL
     )
-
     print(
         "CrossEncoder loaded."
     )
-
     return reranker
 
 
@@ -1375,56 +780,23 @@ def load_cross_encoder():
 # CROSS ENCODER RERANK
 # ============================================================
 
-def cross_encoder_rerank(
-    query,
-    hybrid_results,
-    documents,
-    reranker
-):
-
+def cross_encoder_rerank(query,hybrid_results,documents,reranker):
     if not hybrid_results:
-
         return []
-
     # ========================================================
     # CREATE QUERY-DOCUMENT PAIRS
     # ========================================================
-
     pairs = []
-
     for result in hybrid_results:
-
-        index = (
-            result[
-                "index"
-            ]
-        )
-
-        document_text = (
-            documents[
-                index
-            ][
-                "original_text"
-            ]
-        )
-
-        pairs.append(
-            (
-                query,
-                document_text
-            )
-        )
+        index = (result["index"])
+        document_text = (documents[index]["original_text"])
+        pairs.append((query,document_text))
 
     # ========================================================
     # PREDICT
     # ========================================================
 
-    scores = (
-        reranker.predict(
-            pairs,
-            show_progress_bar=True
-        )
-    )
+    scores = (reranker.predict(pairs,show_progress_bar=True))
 
     # ========================================================
     # ATTACH SCORES
@@ -1432,29 +804,13 @@ def cross_encoder_rerank(
 
     reranked_results = []
 
-    for result, score in zip(
-        hybrid_results,
-        scores
-    ):
-
-        index = (
-            result[
-                "index"
-            ]
-        )
-
+    for result, score in zip(hybrid_results,scores):
+        index = (result["index"])
         reranked_results.append(
             {
-
                 **result,
-
-                "cross_encoder_score":
-                    float(score),
-
-                "payload":
-                    documents[
-                        index
-                    ]
+                "cross_encoder_score":float(score),
+                "payload":documents[index]
             }
         )
 
@@ -1462,14 +818,7 @@ def cross_encoder_rerank(
     # SORT
     # ========================================================
 
-    reranked_results.sort(
-        key=lambda x:
-            x[
-                "cross_encoder_score"
-            ],
-        reverse=True
-    )
-
+    reranked_results.sort(key=lambda x:x["cross_encoder_score"],reverse=True)
     return reranked_results
 
 
@@ -1477,13 +826,7 @@ def cross_encoder_rerank(
 # SEMANTIC DUPLICATE SUPPRESSION
 # ============================================================
 
-def remove_semantic_duplicates(
-    results,
-    embedding_model,
-    top_k,
-    threshold=0.92
-):
-
+def remove_semantic_duplicates(results,embedding_model,top_k,threshold=0.92):
     """
     Removes highly similar chunks from the final result.
 
@@ -1497,22 +840,13 @@ def remove_semantic_duplicates(
     The CrossEncoder score is considered first.
     Therefore, the better-ranked chunk is preserved.
     """
-
     if not results:
-
         return []
 
     selected = []
-
     selected_embeddings = []
-
     texts = [
-        result[
-            "payload"
-        ][
-            "original_text"
-        ]
-
+        result["payload"]["original_text"]
         for result in results
     ]
 
@@ -1520,61 +854,26 @@ def remove_semantic_duplicates(
     # EMBEDDINGS
     # ========================================================
 
-    embeddings = (
-        embedding_model.encode(
-            texts,
-            normalize_embeddings=True,
-            show_progress_bar=False
-        )
-    )
+    embeddings = (embedding_model.encode(texts,normalize_embeddings=True,show_progress_bar=False))
 
     # ========================================================
     # GREEDY DEDUPLICATION
     # ========================================================
 
-    for index, result in enumerate(
-        results
-    ):
-
-        current_embedding = (
-            embeddings[index]
-        )
-
+    for index, result in enumerate(results):
+        current_embedding = (embeddings[index])
         is_duplicate = False
-
-        for selected_embedding in (
-            selected_embeddings
-        ):
-
-            similarity = float(
-                np.dot(
-                    current_embedding,
-                    selected_embedding
-                )
-            )
-
+        for selected_embedding in (selected_embeddings):
+            similarity = float(np.dot(current_embedding,selected_embedding))
             if similarity >= threshold:
-
                 is_duplicate = True
-
                 break
-
         if is_duplicate:
-
             continue
-
-        selected.append(
-            result
-        )
-
-        selected_embeddings.append(
-            current_embedding
-        )
-
+        selected.append(result)
+        selected_embeddings.append(current_embedding)
         if len(selected) >= top_k:
-
             break
-
     return selected
 
 
@@ -1582,32 +881,18 @@ def remove_semantic_duplicates(
 # CREATE RAG PIPELINE
 # ============================================================
 
-def create_rag_pipeline(
-    folder_path,
-    progress_bar,
-    COLLECTION_NAME,
-    EMBEDDING_SIZE,
-    query,
-    top_k
-):
+def create_rag_pipeline(folder_path,progress_bar,COLLECTION_NAME,EMBEDDING_SIZE,query,top_k):
 
     # ========================================================
     # LOAD DOCUMENTS
     # ========================================================
 
-    documents, metadata_set = (
-        get_list_of_dicts(
-            folder_path,
-            progress_bar
-        )
-    )
+    documents, metadata_set = (get_list_of_dicts(folder_path,progress_bar))
 
     if not documents:
-
         print(
             "No documents found."
         )
-
         return []
 
 
@@ -1616,11 +901,8 @@ def create_rag_pipeline(
     # ========================================================
 
     client = QdrantClient(
-
         url=QDRANT_URL,
-
         api_key=QDRANT_API_KEY,
-
         timeout=60
     )
 
@@ -1639,9 +921,7 @@ def create_rag_pipeline(
             f"{COLLECTION_NAME}"
         )
 
-        client.delete_collection(
-            COLLECTION_NAME
-        )
+        client.delete_collection(COLLECTION_NAME)
 
 
     # ========================================================
@@ -1649,19 +929,8 @@ def create_rag_pipeline(
     # ========================================================
 
     client.create_collection(
-
-        collection_name=
-            COLLECTION_NAME,
-
-        vectors_config=
-            VectorParams(
-
-                size=
-                    EMBEDDING_SIZE,
-
-                distance=
-                    Distance.COSINE
-            )
+        collection_name=COLLECTION_NAME,
+        vectors_config=VectorParams(size=EMBEDDING_SIZE,distance=Distance.COSINE)
     )
 
 
@@ -1670,15 +939,9 @@ def create_rag_pipeline(
     # ========================================================
 
     client.create_payload_index(
-
-        collection_name=
-            COLLECTION_NAME,
-
-        field_name=
-            "source",
-
-        field_schema=
-            PayloadSchemaType.KEYWORD
+        collection_name=COLLECTION_NAME,
+        field_name="source",
+        field_schema=PayloadSchemaType.KEYWORD
     )
 
 
@@ -1690,11 +953,7 @@ def create_rag_pipeline(
         "\nLoading embedding model..."
     )
 
-    embedding_model = (
-        SentenceTransformer(
-            EMBEDDING_MODEL
-        )
-    )
+    embedding_model = (SentenceTransformer(EMBEDDING_MODEL))
 
 
     # ========================================================
@@ -1702,11 +961,7 @@ def create_rag_pipeline(
     # ========================================================
 
     original_texts = [
-
-        document[
-            "original_text"
-        ]
-
+        document["original_text"]
         for document in documents
     ]
 
@@ -1715,16 +970,7 @@ def create_rag_pipeline(
         f"{len(original_texts)} chunks..."
     )
 
-    embeddings = (
-        embedding_model.encode(
-
-            original_texts,
-
-            show_progress_bar=True,
-
-            normalize_embeddings=True
-        )
-    )
+    embeddings = (embedding_model.encode(original_texts,show_progress_bar=True,normalize_embeddings=True))
 
 
     # ========================================================
@@ -1732,102 +978,40 @@ def create_rag_pipeline(
     # ========================================================
 
     points = []
-
-    for index, document in enumerate(
-        documents
-    ):
+    for index, document in enumerate(documents):
 
         point = PointStruct(
-
             id=index + 1,
-
-            vector=
-                embeddings[
-                    index
-                ].tolist(),
-
+            vector= embeddings[index].tolist(),
             payload={
-
-                "chunk_id":
-                    document.get(
-                        "chunk_id"
-                    ),
-
-                "text":
-                    document[
-                        "text"
-                    ],
-
-                "original_text":
-                    document[
-                        "original_text"
-                    ],
-
-                "file_path":
-                    document.get(
-                        "file_path"
-                    ),
-
-                "source":
-                    document.get(
-                        "source"
-                    ),
-
-                "chunk_index":
-                    document.get(
-                        "chunk_index"
-                    ),
-
-                "page_numbers":
-                    document.get(
-                        "page_numbers",
-                        []
-                    ),
-
-                "start_page":
-                    document.get(
-                        "start_page"
-                    ),
-
-                "end_page":
-                    document.get(
-                        "end_page"
-                    ),
-
+                "chunk_id":document.get("chunk_id"),
+                "text":document["text"],
+                "original_text":document["original_text"],
+                "file_path":document.get("file_path"),
+                "source":document.get("source"),
+                "chunk_index":document.get("chunk_index"),
+                "page_numbers":document.get("page_numbers",[]),
+                "start_page":document.get("start_page"),
+                "end_page":document.get("end_page"),
                 **{
-
                     key: value
-
-                    for key, value
-                    in document.items()
-
+                    for key, value in document.items()
                     if key not in [
-
                         "text",
-
                         "original_text",
-
                         "file_path",
-
                         "source",
-
                         "chunk_id",
-
                         "chunk_index",
-
                         "page_numbers",
-
                         "start_page",
-
                         "end_page"
                     ]
                 }
             }
         )
 
-        points.append(
-            point
-        )
+        points.append(point)
 
 
     # ========================================================
@@ -1838,14 +1022,7 @@ def create_rag_pipeline(
         "\nUploading vectors to Qdrant..."
     )
 
-    client.upsert(
-
-        collection_name=
-            COLLECTION_NAME,
-
-        points=
-            points
-    )
+    client.upsert(collection_name=COLLECTION_NAME,points=points)
 
     print(
         f"Inserted {len(points)} "
@@ -1857,91 +1034,47 @@ def create_rag_pipeline(
     # BUILD BM25
     # ========================================================
 
-    bm25 = (
-        build_bm25_index(
-            documents
-        )
-    )
+    bm25 = (build_bm25_index(documents))
 
 
     # ========================================================
     # LOAD CROSS ENCODER
     # ========================================================
 
-    reranker = (
-        load_cross_encoder()
-    )
-
+    reranker = (load_cross_encoder())
 
     # ========================================================
     # CREATE FILTER
     # ========================================================
 
     must_list = []
-
     for key, value in metadata_set:
-
         condition = FieldCondition(
-
             key=key,
-
-            match=MatchValue(
-                value=value
-            )
+            match=MatchValue(value=value)
         )
-
-        must_list.append(
-            condition
-        )
-
+        must_list.append(condition)
 
     if must_list:
-
-        filters = Filter(
-            should=must_list
-        )
-
+        filters = Filter(should=must_list)
     else:
-
         filters = None
-
 
     # ========================================================
     # VECTOR SEARCH
     # ========================================================
 
-    def vector_search(
-        query,
-        query_filter,
-        candidate_count
-    ):
-
-        query_vector = (
-            embedding_model.encode(
-                query,
-                normalize_embeddings=True
-            ).tolist()
-        )
-
+    def vector_search(query,query_filter,candidate_count):
+        query_vector = (embedding_model.encode(query,normalize_embeddings=True).tolist())
         results = (
             client.query_points(
-
-                collection_name=
-                    COLLECTION_NAME,
-
-                query=
-                    query_vector,
-
-                limit=
-                    candidate_count,
-
+                collection_name=COLLECTION_NAME,
+                query=query_vector,
+                limit=candidate_count,
                 with_payload=True,
-
-                query_filter=
-                    query_filter
+                query_filter=query_filter
             ).points
         )
-
         return results
 
 
@@ -1957,16 +1090,7 @@ def create_rag_pipeline(
     )
     print("=" * 100)
 
-    vector_results_raw = (
-        vector_search(
-
-            query,
-
-            filters,
-
-            VECTOR_CANDIDATES
-        )
-    )
+    vector_results_raw = (vector_search(query,filters,VECTOR_CANDIDATES))
 
     print(
         f"Qdrant returned "
@@ -1980,25 +1104,13 @@ def create_rag_pipeline(
     # ========================================================
 
     vector_results = []
-
-    for result in (
-        vector_results_raw
-    ):
-
-        document_index = (
-            int(result.id) - 1
-        )
-
+    for result in (vector_results_raw):
+        document_index = (int(result.id) - 1)
         vector_results.append(
             {
 
-                "index":
-                    document_index,
-
-                "qdrant_score":
-                    float(
-                        result.score
-                    )
+                "index":document_index,
+                "qdrant_score":float(result.score)
             }
         )
 
@@ -2015,16 +1127,7 @@ def create_rag_pipeline(
     )
     print("=" * 100)
 
-    bm25_results = (
-        bm25_search(
-
-            bm25,
-
-            query,
-
-            BM25_CANDIDATES
-        )
-    )
+    bm25_results = (bm25_search(bm25,query,BM25_CANDIDATES))
 
     print(
         f"BM25 returned "
@@ -2047,18 +1150,11 @@ def create_rag_pipeline(
 
     hybrid_results = (
         reciprocal_rank_fusion(
-
             vector_results,
-
             bm25_results,
-
             k=RRF_K,
-
-            vector_weight=
-                VECTOR_WEIGHT,
-
-            bm25_weight=
-                BM25_WEIGHT
+            vector_weight=VECTOR_WEIGHT,
+            bm25_weight=BM25_WEIGHT
         )
     )
 
@@ -2073,11 +1169,7 @@ def create_rag_pipeline(
     # LIMIT HYBRID CANDIDATES
     # ========================================================
 
-    hybrid_results = (
-        hybrid_results[
-            :HYBRID_CANDIDATES
-        ]
-    )
+    hybrid_results = (hybrid_results[:HYBRID_CANDIDATES])
 
     print(
         f"Passing "
@@ -2098,18 +1190,7 @@ def create_rag_pipeline(
     )
     print("=" * 100)
 
-    reranked_results = (
-        cross_encoder_rerank(
-
-            query,
-
-            hybrid_results,
-
-            documents,
-
-            reranker
-        )
-    )
+    reranked_results = (cross_encoder_rerank(query,hybrid_results,documents,reranker))
 
 
     # ========================================================
@@ -2126,15 +1207,10 @@ def create_rag_pipeline(
 
     final_results = (
         remove_semantic_duplicates(
-
             reranked_results,
-
             embedding_model,
-
             top_k,
-
-            threshold=
-                SEMANTIC_DUPLICATE_THRESHOLD
+            threshold=SEMANTIC_DUPLICATE_THRESHOLD
         )
     )
 
@@ -2143,11 +1219,9 @@ def create_rag_pipeline(
         f"{len(final_results)}"
     )
 
-
     # ========================================================
     # RETURN
     # ========================================================
-
     return final_results
 
 
@@ -2157,45 +1231,18 @@ def create_rag_pipeline(
 
 if __name__ == "__main__":
 
-    folder_path = (
-        r"C:\Users\gprak\Downloads"
-    )
-
+    folder_path = (r"C:\Users\gprak\Downloads")
     progress_bar = True
-
-    COLLECTION_NAME = (
-        "knowledge_filter"
-    )
-
+    COLLECTION_NAME = ("knowledge_filter")
     EMBEDDING_SIZE = 384
-
-    query = (
-        "Give details about python."
-    )
-
+    query = ("Give details about python.")
     top_k = 3
-
 
     # ========================================================
     # RUN RAG
     # ========================================================
 
-    results = (
-        create_rag_pipeline(
-
-            folder_path,
-
-            progress_bar,
-
-            COLLECTION_NAME,
-
-            EMBEDDING_SIZE,
-
-            query,
-
-            top_k
-        )
-    )
+    results = (create_rag_pipeline(folder_path,progress_bar,COLLECTION_NAME,EMBEDDING_SIZE,query,top_k))
 
 
     # ========================================================
@@ -2203,35 +1250,15 @@ if __name__ == "__main__":
     # ========================================================
 
     print("\n")
-
+    print("=" * 100)
+    print("FINAL HYBRID SEARCH RESULTS")
     print("=" * 100)
 
-    print(
-        "FINAL HYBRID SEARCH RESULTS"
-    )
-
-    print("=" * 100)
-
-
-    for index, result in enumerate(
-        results,
-        start=1
-    ):
-
-        payload = (
-            result[
-                "payload"
-            ]
-        )
-
+    for index, result in enumerate(results,start=1):
+        payload = (result["payload"])
         print("\n")
-
         print("-" * 100)
-
-        print(
-            f"RESULT {index}"
-        )
-
+        print(f"RESULT {index}")
         print("-" * 100)
 
 
@@ -2248,44 +1275,32 @@ if __name__ == "__main__":
 
         print(
             "Final CrossEncoder Score:",
-            result.get(
-                "cross_encoder_score"
-            )
+            result.get("cross_encoder_score")
         )
 
         print(
             "RRF Score:",
-            result.get(
-                "rrf_score"
-            )
+            result.get("rrf_score")
         )
 
         print(
             "Qdrant Score:",
-            result.get(
-                "vector_score"
-            )
+            result.get("vector_score")
         )
 
         print(
             "BM25 Score:",
-            result.get(
-                "bm25_score"
-            )
+            result.get("bm25_score")
         )
 
         print(
             "Vector Rank:",
-            result.get(
-                "vector_rank"
-            )
+            result.get("vector_rank")
         )
 
         print(
             "BM25 Rank:",
-            result.get(
-                "bm25_rank"
-            )
+            result.get("bm25_rank")
         )
 
 
@@ -2295,37 +1310,27 @@ if __name__ == "__main__":
 
         print(
             "\nFile:",
-            payload.get(
-                "file_path"
-            )
+            payload.get("file_path")
         )
 
         print(
             "Pages:",
-            payload.get(
-                "page_numbers"
-            )
+            payload.get("page_numbers")
         )
 
         print(
             "Start Page:",
-            payload.get(
-                "start_page"
-            )
+            payload.get("start_page")
         )
 
         print(
             "End Page:",
-            payload.get(
-                "end_page"
-            )
+            payload.get("end_page")
         )
 
         print(
             "Chunk:",
-            payload.get(
-                "chunk_index"
-            )
+            payload.get("chunk_index")
         )
 
 
@@ -2338,9 +1343,7 @@ if __name__ == "__main__":
         )
 
         print(
-            payload.get(
-                "text"
-            )
+            payload.get("text")
         )
 
 
@@ -2353,9 +1356,7 @@ if __name__ == "__main__":
         )
 
         print(
-            payload.get(
-                "original_text"
-            )
+            payload.get("original_text")
         )
 
         print(
