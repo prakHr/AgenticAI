@@ -79,10 +79,7 @@ def get_app(filename):
 
 
 filename = os.path.basename(__file__).split(".")[0]
-
 app = get_app(filename)
-mcp = FastApiMCP(app)
-mcp.mount_http()
 
 @app.get("/", include_in_schema=False)
 async def redirect_to_docs():
