@@ -27,7 +27,8 @@ from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_mcp import FastApiMCP
-
+import uvicorn
+    
 
 
 load_dotenv()
@@ -76,7 +77,8 @@ def get_app(filename):
     )
     return app
 
-
+def run_app(app,host,port):
+    uvicorn.run(app, host=host, port=port)
 
 filename = os.path.basename(__file__).split(".")[0]
 
@@ -93,6 +95,7 @@ def read_item(model:str,system_prompt:str,human_prompt:str):
     results = run_giveGuidance_execution(system_prompt,human_prompt,model)
     return results
 
+
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="localhost", port=8000)
+    run_app(app,"localhost",8000)
+    
