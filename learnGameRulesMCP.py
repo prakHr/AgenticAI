@@ -48,7 +48,7 @@ def run_gameRulesLearner_execution(game_topic:str,model:str)->str:
     ROLE = "role"
     CONTENT = "content"
     messages = [
-        {ROLE:role1,CONTENT:f"Give clear game rules on how to approach this game. Keep it as short and concise and to the point as possible."},
+        {ROLE:role1,CONTENT:f"Give clear game rules on how to approach this game. Keep it as short and concise and to the point as possible. Please do not hallucinate."},
         {ROLE:role2,CONTENT:game_topic},
     ]
     

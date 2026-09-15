@@ -50,7 +50,7 @@ def run_videoLinksSuggestion_execution(user_prompt:str,model:str)->str:
     ROLE = "role"
     CONTENT = "content"
     messages = [
-        {ROLE:role1,CONTENT:f"Suggest some youtube videos on the basis of this prompt."},
+        {ROLE:role1,CONTENT:f"Suggest some youtube videos on the basis of this prompt. Please do not hallucinate."},
         {ROLE:role2,CONTENT:user_prompt},
     ]
     

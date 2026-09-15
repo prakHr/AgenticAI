@@ -49,7 +49,7 @@ def run_gymExercisesDoer_execution(gym_day:str,model:str)->str:
     ROLE = "role"
     CONTENT = "content"
     messages = [
-        {ROLE:role1,CONTENT:f"Suggest gym exercises on the basis of a particular gym day."},
+        {ROLE:role1,CONTENT:f"Suggest gym exercises on the basis of a particular gym day. Please do not hallucinate."},
         {ROLE:role2,CONTENT:gym_day},
     ]
     
