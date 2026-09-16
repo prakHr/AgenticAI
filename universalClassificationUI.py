@@ -20,7 +20,7 @@ from dash import (
 
 import dash_bootstrap_components as dbc
 
-
+from rapidfuzz import process, fuzz, utils
 # ============================================================
 # Configuration
 # ============================================================
@@ -28,7 +28,6 @@ import dash_bootstrap_components as dbc
 load_dotenv()
 
 MY_API_KEY = os.getenv("GROQ_API_KEY")
-
 if not MY_API_KEY:
     raise ValueError(
         "GROQ_API_KEY not found. Add it to your .env file."
@@ -474,6 +473,13 @@ app.layout = dbc.Container(
 )
 
 
+def check(labels,label):
+    first_same_words = process.extractOne(label, labels, scorer=fuzz.WRatio, processor=utils.default_process)
+    first_same_word,score = first_same_words[0],first_same_words[1]
+    THRESHOLD = 80
+    if score > THRESHOLD:
+        return False
+    return True
 # ============================================================
 # Label management
 # ============================================================
@@ -497,7 +503,8 @@ def add_label(n_clicks, label, labels):
     label = label.strip().lower()
 
     if label and label not in labels:
-        labels.append(label)
+        if check(labels,label):
+            labels.append(label)
 
     return labels, ""
 
