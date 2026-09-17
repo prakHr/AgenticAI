@@ -1,3 +1,9 @@
+Universal Classification UI in Dash Framework which is an advanced version of Python
+
+<img width="1916" height="1077" alt="image" src="https://github.com/user-attachments/assets/85bbc0a3-920d-452d-b73b-3c29912bf2f1" />
+
+
+
 <img width="1467" height="872" alt="image" src="https://github.com/user-attachments/assets/c1a036ba-1936-472b-996b-dda94f295d50" /><img width="1485" height="527" alt="image" src="https://github.com/user-attachments/assets/a9ad9d70-0baa-4706-86fc-42bc9306043f" /># universal_planner
 Created a planner and created a api for the same using ML
 
