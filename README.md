@@ -1,4 +1,4 @@
-Universal Classification UI in Dash Framework which is an advanced version of Python
+Universal Classification UI in Dash Framework which is an advanced version of Flask in Python
 
 <img width="1916" height="1077" alt="image" src="https://github.com/user-attachments/assets/85bbc0a3-920d-452d-b73b-3c29912bf2f1" />
 
